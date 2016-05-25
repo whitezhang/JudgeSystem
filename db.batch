@@ -1,0 +1,5 @@
+http://localhost:8090/index?service=getUser&&ipaddr=default
+
+
+
+db.user.insert({uid:'tj110', username:'white', password:'123', nickname:'nickname', ischallenger:false, score:1.00, privilege:'admin'});
