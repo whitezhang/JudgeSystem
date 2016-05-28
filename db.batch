@@ -1,7 +1,7 @@
 http://localhost:8090/user?uid=tj110&&ipaddr=default
 http://localhost:8090/problem?pid=1&&ipaddr=default
 http://localhost:8090/contest?cid=1&&ipaddr=default
-
+http://localhost:8090/login?username=white&&ipaddr=default&password=123
 
 
 db.user.insert({uid:'tj110', username:'white', password:'123', nickname:'nickname', ischallenger:false, score:1.00, privilege:'admin'});

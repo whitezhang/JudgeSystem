@@ -12,6 +12,18 @@ import (
 	"service/auth"
 )
 
+const (
+	InfoLoginFailed = "Incorrect username or password"
+	InfoLoginSucc   = "Let's GO"
+
+	InfoHack = "What the fk r u looking for?"
+)
+
+type ErrorInfo struct {
+	Status string
+	Info   string
+}
+
 func isAuthorized(query url.Values) bool {
 	var ipaddr string
 
@@ -35,6 +47,44 @@ func isAuthorized(query url.Values) bool {
 	return true
 }
 
+func loginHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		query     url.Values
+		err       error
+		userInfo  daomanage.User
+		errorInfo ErrorInfo
+	)
+	query, err = url.ParseQuery(r.URL.RawQuery)
+	if err != nil {
+		log.Println("Parse Error", err)
+		return
+	}
+
+	ok := isAuthorized(query)
+	if ok == false {
+		fmt.Fprintf(w, InfoHack)
+	}
+
+	// Get user info
+	if s, ok := query["username"]; ok {
+		userInfo, err = daomanage.GetUserInfo("username", s[0])
+		if p, ok := query["password"]; ok {
+			if p[0] == userInfo.Password {
+				errorInfo.Status = "OK"
+				errorInfo.Info = InfoLoginSucc
+				data, _ := json.Marshal(errorInfo)
+				fmt.Fprintf(w, string(data))
+				return
+			}
+		}
+		errorInfo.Status = "Error"
+		errorInfo.Info = InfoLoginFailed
+		data, _ := json.Marshal(errorInfo)
+		fmt.Fprintf(w, string(data))
+		return
+	}
+}
+
 func problemHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		query       url.Values
@@ -49,7 +99,7 @@ func problemHandler(w http.ResponseWriter, r *http.Request) {
 
 	ok := isAuthorized(query)
 	if ok == false {
-		fmt.Fprintf(w, "**** GO AWAY!")
+		fmt.Fprintf(w, InfoHack)
 	}
 
 	// Get problem info
@@ -61,7 +111,7 @@ func problemHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	fmt.Fprintf(w, "What the fk r u looking for?")
+	fmt.Fprintf(w, InfoHack)
 }
 
 func contestHandler(w http.ResponseWriter, r *http.Request) {
@@ -78,7 +128,7 @@ func contestHandler(w http.ResponseWriter, r *http.Request) {
 
 	ok := isAuthorized(query)
 	if ok == false {
-		fmt.Fprintf(w, "**** GO AWAY!")
+		fmt.Fprintf(w, InfoHack)
 	}
 
 	// Get contest info
@@ -90,7 +140,7 @@ func contestHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	fmt.Fprintf(w, "What the fk r u looking for?")
+	fmt.Fprintf(w, InfoHack)
 }
 
 func userHandler(w http.ResponseWriter, r *http.Request) {
@@ -107,21 +157,22 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 
 	ok := isAuthorized(query)
 	if ok == false {
-		fmt.Fprintf(w, "**** GO AWAY!")
+		fmt.Fprintf(w, InfoHack)
 	}
 
 	// Get user info
 	if s, ok := query["uid"]; ok {
-		userInfo, err = daomanage.GetUserInfo(s[0])
+		userInfo, err = daomanage.GetUserInfo("uid", s[0])
 		if err == nil {
 			data, _ := json.Marshal(userInfo)
 			fmt.Fprintf(w, string(data))
 			return
 		}
 	}
-	fmt.Fprintf(w, "What the fk r u looking for?")
+	fmt.Fprintf(w, InfoHack)
 }
 
+/*
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 	var query url.Values
 	var ipaddr string
@@ -153,3 +204,4 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Fprintf(w, "Hello index!")
 }
+*/

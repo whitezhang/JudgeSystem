@@ -78,7 +78,7 @@ func GetProblemInfo(pid string) (problemInfo Problem, err error) {
 	return
 }
 
-func GetUserInfo(uid string) (userInfo User, err error) {
+func GetUserInfo(key, value string) (userInfo User, err error) {
 	session, err := mgo.Dial(hostName)
 	if err != nil {
 		log.Println("Connect MongoDB failed")
@@ -89,10 +89,10 @@ func GetUserInfo(uid string) (userInfo User, err error) {
 	session.SetMode(mgo.Monotonic, true)
 	collection := session.DB(dbName).C("user")
 
-	err = collection.Find(bson.M{"uid": uid}).One(&userInfo)
+	err = collection.Find(bson.M{key: value}).One(&userInfo)
 	// log.Println(userInfo)
 	if err != nil {
-		log.Printf("No User named: %s\n", uid)
+		log.Printf("No User %s: %s\n", key, value)
 		return User{}, err
 	}
 	return

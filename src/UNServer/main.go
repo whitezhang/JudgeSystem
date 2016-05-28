@@ -21,8 +21,12 @@ func main() {
 		time.Sleep(1)
 		return
 	}
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
 	http.HandleFunc("/index", indexHandler)
+
+	http.HandleFunc("/login", loginHandler)
+
 	http.HandleFunc("/user", userHandler)
 	http.HandleFunc("/problem", problemHandler)
 	http.HandleFunc("/contest", contestHandler)
