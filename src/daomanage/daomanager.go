@@ -40,23 +40,23 @@ func (man *Manager) initConf(cfgFile string) (err error) {
 	return
 }
 
-func GetContest(cid string) (problemList string, err error) {
+func GetContest(cid string) (contestInfo Contest, err error) {
 	session, err := mgo.Dial(hostName)
 	if err != nil {
 		log.Println("Connect MongoDB failed")
-		return "", err
+		return Contest{}, err
 	}
 	defer session.Close()
 
 	session.SetMode(mgo.Monotonic, true)
 	collection := session.DB(dbName).C("contest")
 
-	err = collection.FindId(bson.ObjectIdHex(cid)).Select(bson.M{"problemlist": 1}).One(&problemList)
+	err = collection.Find(bson.M{"cid": cid}).One(&contestInfo)
 	if err != nil {
 		log.Printf("No Contest named: %s\n", cid)
-		return "", err
+		return Contest{}, err
 	}
-	return problemList, nil
+	return contestInfo, nil
 }
 
 func GetProblemInfo(pid string) (problemInfo Problem, err error) {
@@ -70,7 +70,7 @@ func GetProblemInfo(pid string) (problemInfo Problem, err error) {
 	session.SetMode(mgo.Monotonic, true)
 	collection := session.DB(dbName).C("problem")
 
-	err = collection.FindId(bson.ObjectIdHex(pid)).One(&problemInfo)
+	err = collection.Find(bson.M{"pid": pid}).One(&problemInfo)
 	if err != nil {
 		log.Printf("No Problem named: %s\n", pid)
 		return Problem{}, err

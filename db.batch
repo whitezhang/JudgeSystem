@@ -1,5 +1,37 @@
-http://localhost:8090/index?service=getUser&&ipaddr=default
+http://localhost:8090/user?uid=tj110&&ipaddr=default
+http://localhost:8090/problem?pid=1&&ipaddr=default
+http://localhost:8090/contest?cid=1&&ipaddr=default
 
 
 
 db.user.insert({uid:'tj110', username:'white', password:'123', nickname:'nickname', ischallenger:false, score:1.00, privilege:'admin'});
+db.problem.insert({pid:'1', title:'title', description:'des', time:'1', memory:"1000", simpleinput:"input", simpleoutput:'output'});
+db.contest.insert({cid:'1', problemlist:'1;2;3'});
+
+
+
+type Problem struct {
+	PID          string
+	Title        string `bson:"title" json:"title"`
+	Description  string `bson:"description" json:"description"`
+	Time         string `bson:"time" json:"time"`
+	Memory       string `bson:"memory" json:"memory"`
+	SimpleInput  string `bson:"simpleinput" json:"simpleinput"`
+	SimpleOutput string `bson:"simpleoutput" json:"simpleoutput"`
+}
+
+type User struct {
+	UID          string
+	Username     string `bson:"username" json:"username"`
+	Password     string `bson:"password" json:"password"`
+	Nickname     string `bson:"nickname" json:"nickname"`
+	IsChallenger bool
+	Score        float64
+	Privilege    string `bson:"privilege" json:"privilege"`
+}
+
+type Contest struct {
+	CID string
+	// pid1;pid2;pid3
+	ProblemList string `bson:"problemlist" json:"problemlist"`
+}

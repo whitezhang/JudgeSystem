@@ -23,6 +23,9 @@ func main() {
 	}
 
 	http.HandleFunc("/index", indexHandler)
+	http.HandleFunc("/user", userHandler)
+	http.HandleFunc("/problem", problemHandler)
+	http.HandleFunc("/contest", contestHandler)
 	log.Printf("UN HTTP Server is listenting on %s\n", port)
 	http.Serve(lis, nil)
 }
