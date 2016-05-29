@@ -23,13 +23,16 @@ func main() {
 	}
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
-	http.HandleFunc("/index", indexHandler)
+	http.HandleFunc("/index", indexPageHandler)
+	http.HandleFunc("/contests", contestPageHandler)
+	http.HandleFunc("/problems", problemPageHandler)
+	http.HandleFunc("/status", statusPageHandler)
+	http.HandleFunc("/ratings", ratingPageHandler)
 
-	http.HandleFunc("/login", loginHandler)
-
-	http.HandleFunc("/user", userHandler)
-	http.HandleFunc("/problem", problemHandler)
-	http.HandleFunc("/contest", contestHandler)
+	http.HandleFunc("/sLogin", loginHandler)
+	http.HandleFunc("/sUser", userHandler)
+	http.HandleFunc("/sProblem", problemHandler)
+	http.HandleFunc("/sContest", contestHandler)
 	log.Printf("UN HTTP Server is listenting on %s\n", port)
 	http.Serve(lis, nil)
 }
