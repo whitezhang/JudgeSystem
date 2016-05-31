@@ -121,6 +121,7 @@ func contestHandler(w http.ResponseWriter, r *http.Request) {
 		contestInfo daomanage.Contest
 	)
 	query, err = url.ParseQuery(r.URL.RawQuery)
+	log.Println(query)
 	if err != nil {
 		log.Println("Parse Error", err)
 		return
@@ -171,37 +172,3 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Fprintf(w, InfoHack)
 }
-
-/*
-func indexHandler(w http.ResponseWriter, r *http.Request) {
-	var query url.Values
-	var ipaddr string
-	var err error
-
-	query, err = url.ParseQuery(r.URL.RawQuery)
-	if err != nil {
-		log.Println("Parse Error", err)
-		return
-	}
-
-	// Authorize this query
-	if len(query["ipaddr"]) > 0 {
-		ipaddr = query["ipaddr"][0]
-	} else {
-		return
-	}
-	authCode, authErr := ctx.SvrCtx.AuthMan.DoAuth(ipaddr)
-	if authErr != nil {
-		e := fmt.Errorf("Faild to auth this request for some internal error: %s", authErr)
-		l4g.WarnLogger.Warn("%s", e)
-		return
-	}
-	if authCode != auth.AuthCode_OK {
-		e := fmt.Errorf("Failed to auth this request, authCode: %d", authCode)
-		l4g.WarnLogger.Warn("%s", e)
-		return
-	}
-
-	fmt.Fprintf(w, "Hello index!")
-}
-*/

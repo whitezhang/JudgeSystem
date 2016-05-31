@@ -6,7 +6,6 @@ import (
 	"net"
 	"net/http"
 	"runtime"
-	"time"
 	// "code.google.com/p/gcfg"
 )
 
@@ -18,7 +17,6 @@ func main() {
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
 		log.Println("Init Listen error: ", err)
-		time.Sleep(1)
 		return
 	}
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
@@ -29,10 +27,12 @@ func main() {
 	http.HandleFunc("/status", statusPageHandler)
 	http.HandleFunc("/ratings", ratingPageHandler)
 
-	http.HandleFunc("/sLogin", loginHandler)
-	http.HandleFunc("/sUser", userHandler)
-	http.HandleFunc("/sProblem", problemHandler)
-	http.HandleFunc("/sContest", contestHandler)
+	http.HandleFunc("/problem", singleProblemHandler)
+
+	http.HandleFunc("/slogin", loginHandler)
+	http.HandleFunc("/suser", userHandler)
+	http.HandleFunc("/sproblem", problemHandler)
+	http.HandleFunc("/scontest", contestHandler)
 	log.Printf("UN HTTP Server is listenting on %s\n", port)
 	http.Serve(lis, nil)
 }
