@@ -7,10 +7,11 @@ app.controller('customersCtrl',
         switch (pathname) {
             case "contest":
                 var cid = url.substring(url.lastIndexOf("=") + 1, url.length);
-                alert(cid);
                 $http.get("http://localhost:8090/scontest", {
-                    cid: cid,
-                    ipaddr: "defalut"
+                    params: {
+                        cid: cid,
+                        ipaddr: "defalut"
+                    }
                 }).success(function(response) {
                     $scope.problemlist = response.problemlist;
                 });
@@ -18,16 +19,13 @@ app.controller('customersCtrl',
             case "problem":
                 var pid = url.substring(url.lastIndexOf("=") + 1, url.length);
                 $http.get("http://localhost:8090/sproblem", {
-                    pid: pid,
-                    ipaddr: "defalut"
+                    params: {
+                        pid: pid,
+                        ipaddr: "defalut"
+                    }
                 }).success(function(response) {
                     // $scope.problemlist = response.problemlist;
                 });
                 break;
         }
-    });
-
-app.controller('formCtrl',
-    function($scope) {
-
     });

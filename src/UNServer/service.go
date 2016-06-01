@@ -100,6 +100,7 @@ func problemHandler(w http.ResponseWriter, r *http.Request) {
 	ok := isAuthorized(query)
 	if ok == false {
 		fmt.Fprintf(w, InfoHack)
+		return
 	}
 
 	// Get problem info
@@ -120,6 +121,7 @@ func contestHandler(w http.ResponseWriter, r *http.Request) {
 		err         error
 		contestInfo daomanage.Contest
 	)
+	log.Println(r)
 	query, err = url.ParseQuery(r.URL.RawQuery)
 	log.Println(query)
 	if err != nil {
@@ -130,6 +132,7 @@ func contestHandler(w http.ResponseWriter, r *http.Request) {
 	ok := isAuthorized(query)
 	if ok == false {
 		fmt.Fprintf(w, InfoHack)
+		return
 	}
 
 	// Get contest info
@@ -159,6 +162,7 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 	ok := isAuthorized(query)
 	if ok == false {
 		fmt.Fprintf(w, InfoHack)
+		return
 	}
 
 	// Get user info

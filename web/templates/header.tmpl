@@ -6,7 +6,7 @@
 <link rel="stylesheet" type="text/css" href="/static/css/common.css">
 <script src="http://apps.bdimg.com/libs/angular.js/1.4.6/angular.min.js"></script>
 
-<div ng-app="myApp" ng-controller="formCtrl">
+<div ng-app="myApp" ng-controller="customersCtrl">
 
 	<nav class="navbar navbar-default">
 		<div class="container-fluid">
@@ -31,7 +31,9 @@
 		<div class="btn-group btn-group-justified">
 			<a href="/index" class="btn btn-default">HOME</a>
 			<a href="/problems" class="btn btn-default">PROBLEMSET</a>
-			<a href="/contests" class="btn btn-default">CONTESTS&nbsp<img src="/static/images/cup.png"></a>
+			<a href="/contests" class="btn btn-default">
+				CONTESTS&nbsp
+				<img src="/static/images/cup.png"></a>
 			<a href="/status" class="btn btn-default">STATUS</a>
 			<a href="/ratings" class="btn btn-default">RATING</a>
 			<a href="#" class="btn btn-default">HOMEWORK</a>
@@ -39,9 +41,7 @@
 		</div>
 	</div>
 
-	<div ng-controller="customersCtrl">
-		<ul>{{ problemlist }}</ul>
-	</div>
+	
 </div>
 </head>
 [[end]]

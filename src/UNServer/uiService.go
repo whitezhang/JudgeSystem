@@ -6,6 +6,19 @@ import (
 	"net/http"
 )
 
+func singleContestHandler(w http.ResponseWriter, r *http.Request) {
+	tmpl, err := template.New("contest.tmpl").Delims("[[", "]]").ParseGlob("./templates/*")
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	err = tmpl.Execute(w, nil)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
 func singleProblemHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl, err := template.New("problem.tmpl").Delims("[[", "]]").ParseGlob("./templates/*")
 	if err != nil {
