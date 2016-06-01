@@ -1,12 +1,26 @@
-.self-block {
-	
+.first-block {
+	margin: 0 auto;
+	width: 90%;
 }
 
-.self-block .block-title {
+.second-block {
 	margin: 0 auto;
+	width: 85%;
+}
+
+.page-block {
+	margin: 0 auto;
+	width: 80%;
+}
+
+.page-block .block-title {
 	text-align: center;
 }
 
-.self-block .block-content {
+.page-block .block-content {
 
+}
+
+.about-block {
+	margin-left: 10%;
 }

@@ -71,6 +71,19 @@ func problemPageHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func aboutPageHandler(w http.ResponseWriter, r *http.Request) {
+	tmpl, err := template.New("about.tmpl").Delims("[[", "]]").ParseGlob("./templates/*")
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	err = tmpl.Execute(w, nil)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
 func contestPageHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl, err := template.New("contests.tmpl").Delims("[[", "]]").ParseGlob("./templates/*")
 	if err != nil {
