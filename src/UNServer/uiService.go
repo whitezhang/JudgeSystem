@@ -45,6 +45,19 @@ func statusPageHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func submitPageHandler(w http.ResponseWriter, r *http.Request) {
+	tmpl, err := template.New("submit.tmpl").Delims("[[", "]]").ParseGlob("./templates/*")
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	err = tmpl.Execute(w, nil)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
 func ratingPageHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl, err := template.New("ratings.tmpl").Delims("[[", "]]").ParseGlob("./templates/*")
 	if err != nil {

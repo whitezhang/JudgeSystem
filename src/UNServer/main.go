@@ -27,6 +27,7 @@ func main() {
 	http.HandleFunc("/status", statusPageHandler)
 	http.HandleFunc("/ratings", ratingPageHandler)
 	http.HandleFunc("/about", aboutPageHandler)
+	http.HandleFunc("/submit", submitPageHandler)
 
 	http.HandleFunc("/problem", singleProblemHandler)
 	http.HandleFunc("/contest", singleContestHandler)
