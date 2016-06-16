@@ -11,13 +11,14 @@
 const int LANGC = 2;
 const int LANGJAVA = 3;
 const int DEBUG = 1;
-const int STD_MB = 1048576;
+const int STD_MB = 1024*1024;
 //const int STD_MB = 10;
 const int BUFFER_SIZE = 1024;
 
 void run_solution(int runid, int clientid) {
     char buf[BUFFER_SIZE], runidstr[BUFFER_SIZE];
     struct rlimit LIM;
+    ptrace(PTRACE_TRACEME, 0, NULL, NULL);
     // max time of cpu
     LIM.rlim_max = 800;
     LIM.rlim_cur = 800;
@@ -28,9 +29,11 @@ void run_solution(int runid, int clientid) {
     LIM.rlim_cur = 1 * STD_MB;
     setrlimit(RLIMIT_FSIZE, &LIM);
 
-    // max virtual memory
-    LIM.rlim_max = STD_MB * 20;
-    LIM.rlim_cur = STD_MB * 20;
+    // max virtual memory, heap
+    LIM.rlim_max = STD_MB * 10;
+    LIM.rlim_cur = STD_MB * 10;
+    //LIM.rlim_max = 100;
+    //LIM.rlim_cur = 100;
     setrlimit(RLIMIT_AS, &LIM);
 
     // max progress for user
@@ -42,15 +45,17 @@ void run_solution(int runid, int clientid) {
     LIM.rlim_cur = STD_MB * 20;
     setrlimit(RLIMIT_STACK, &LIM);
 
-    LIM.rlim_cur = STD_MB * 1;
-    LIM.rlim_cur = STD_MB * 1;
+    LIM.rlim_cur = STD_MB * 10;
+    LIM.rlim_cur = STD_MB * 10;
     setrlimit(RLIMIT_DATA, &LIM);
 
     sprintf(runidstr, "%d", runid);
     sprintf(buf, "%d", clientid);
+    //*/
 
     // run client
     //execl("./test", "test", "" , NULL);
+    //execl("./main < in.txt", "main", "" , NULL);
     execl("./main", "main", "" , NULL);
 }
 
@@ -86,18 +91,22 @@ int get_page_fault_mem(struct rusage & ruse, pid_t & pidApp) {
     return m_minflt;
 }
 
-int watch_solution(pid_t pidApp, int lang, int topmemory, int mem_lmt) {
-    int status;
+int watch_solution(pid_t pidApp, int lang, int topmemory, int mem_lmt, int time_lmt) {
+    int status, exitcode, sig;
     struct rusage ruse;
     struct user_regs_struct reg;
-    int tempmemory;
+    int tempmemory, usedtime;
+    usedtime = 0;
 
     if(topmemory == 0) {
         // Memory being used by this process
         topmemory = get_proc_status(pidApp, "VmRss:") << 10;
+        if(DEBUG) {
+            printf("VMRss:%d KB\n", topmemory);
+        }
     }
 
-    if(1) {
+    while(1) {
         wait4(pidApp, &status, 0, &ruse);
         if (lang == LANGJAVA) {
             tempmemory = get_page_fault_mem(ruse, pidApp);
@@ -112,23 +121,46 @@ int watch_solution(pid_t pidApp, int lang, int topmemory, int mem_lmt) {
         if(tempmemory > topmemory) {
             topmemory = tempmemory;
         }
-        printf("%d\t%d\n", topmemory, mem_lmt);
+        printf("%.2fMB\t%dMB\n", topmemory*1.0/STD_MB, mem_lmt);
         if(topmemory > mem_lmt * STD_MB) {
             if(DEBUG) {
                 printf("Out of memory %d\n", topmemory);
             }
             ptrace(PTRACE_KILL, pidApp, NULL, NULL);
-            //break;
+            break;
         }
-        //ptrace(PTRACE_GETREGS, child, NULL, &reg);
+
+        // 0 if the subprocess successed
+        if(WIFEXITED(status)) {
+            break;
+        }
+        exitcode = WEXITSTATUS(status);
+        // if the subprocess terminted by signal
+        if(WIFSIGNALED(status)) {
+            sig = WTERMSIG(status);
+            if(DEBUG) {
+                printf("WTERMSIG=%d\n", sig);
+                psignal(sig, NULL);
+            }
+            break;
+        }
+        usedtime += (ruse.ru_utime.tv_sec * 1000 + ruse.ru_utime.tv_usec / 1000);
+        usedtime += (ruse.ru_stime.tv_sec * 1000 + ruse.ru_stime.tv_usec / 1000);
+        if(usedtime >= time_lmt) {
+            ptrace(PTRACE_KILL, pidApp, NULL, NULL);
+            break;
+        }
+
+        ptrace(PTRACE_GETREGS, pidApp, NULL, &reg);
         //printf("%ld\n", (long)reg.orig_rax);
-        //ptrace(PTRACE_KILL, child, NULL, NULL);
+        ptrace(PTRACE_SYSCALL, pidApp, NULL, NULL);
     }
     return 0;
 }
 
 int main() {
     int mem_lmt = 32;   // 32MB
+    int time_lmt = 1000;    // 1000ms
     int topmemory = 0;
 
     pid_t pidApp = fork();
@@ -136,7 +168,6 @@ int main() {
         run_solution(1, 1);
     }
     else {
-        //watch_solution(pidApp, LANGJAVA, 1000);
-        watch_solution(pidApp, LANGC, topmemory, mem_lmt);
+        watch_solution(pidApp, LANGC, topmemory, mem_lmt, time_lmt);
     }
 }
