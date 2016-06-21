@@ -1,21 +1,61 @@
-#include <sys/resource.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <dirent.h>
+#include <unistd.h>
+#include <time.h>
+#include <stdarg.h>
+#include <ctype.h>
+#include <sys/wait.h>
 #include <sys/ptrace.h>
 #include <sys/types.h>
-#include <sys/wait.h>
 #include <sys/user.h>
 #include <sys/syscall.h>
-#include <stdio.h>
+#include <sys/time.h>
+#include <sys/resource.h>
+#include <sys/signal.h>
+//#include <sys/types.h>
+#include <sys/stat.h>
 #include <unistd.h>
-#include <string.h>
+//#include <mysql/mysql.h>
+#include <assert.h>
 
-const int LANGC = 2;
+const int LANGC = 1;
+const int LANGCPP = 2;
 const int LANGJAVA = 3;
 const int DEBUG = 1;
 const int STD_MB = 1024*1024;
-//const int STD_MB = 10;
 const int BUFFER_SIZE = 1024;
 
+const int SUCCESS = 1;
+const int ERROR = 1;
+
+const int GLOBALID = 1536;
+
+const int F_AC = 0;
+const int F_WA = 1;
+const int F_RE = 2;
+const int F_TLE = 3;
+const int F_PE = 4;
+
+int execute_cmd(const char *fmt, ...) {
+    char cmd[BUFFER_SIZE];
+    int ret = 0;
+    va_list ap;
+    va_start(ap, fmt);
+    vsprintf(cmd, fmt, ap);
+    ret = system(cmd);
+    va_end(ap);
+    return ret;
+}
+
 void run_solution(int runid, int clientid) {
+    nice(19);
+    //chdir(WORK_DIR);
+    //freopen("data.in", "r", stdin);
+    freopen("user.out", "w", stdout);
+    freopen("error.out", "a+", stderr);
+
     char buf[BUFFER_SIZE], runidstr[BUFFER_SIZE];
     struct rlimit LIM;
     ptrace(PTRACE_TRACEME, 0, NULL, NULL);
@@ -56,7 +96,7 @@ void run_solution(int runid, int clientid) {
     // run client
     //execl("./test", "test", "" , NULL);
     //execl("./main < in.txt", "main", "" , NULL);
-    execl("./main", "main", "" , NULL);
+    execl("./Main", "Main", "" , NULL);
 }
 
 int get_proc_status(int pid, const char * mark) {
@@ -91,6 +131,64 @@ int get_page_fault_mem(struct rusage & ruse, pid_t & pidApp) {
     return m_minflt;
 }
 
+int compile(int lang) {
+    int pid;
+    const char *CP_C[] = {"gcc", "Main.c", "-o", "Main", "-fno-asm", "-Wall",
+                        "-lm", "--static", "-std=c99", "-DONLINE_JUDGE", NULL};
+    const char *CP_CPP[] = {"g++", "Main.cc", "-o", "Main", "-fno-asm", "-Wall",
+                        "-lm", "--static", "-std=c99", "-DONLINE_JUDGE", NULL};
+    pid = fork();
+    if(pid == 0) {
+        struct rlimit LIM;
+        LIM.rlim_max = 60;
+        LIM.rlim_cur = 60;
+        setrlimit(RLIMIT_CPU, &LIM);
+        alarm(60);
+        LIM.rlim_max = 100 * STD_MB;
+        LIM.rlim_cur = 100 * STD_MB;
+        setrlimit(RLIMIT_FSIZE, &LIM);
+
+        if(lang == LANGJAVA) {
+            
+        }
+        else {
+            LIM.rlim_max = STD_MB << 10;
+            LIM.rlim_cur = STD_MB << 10;
+        }
+        setrlimit(RLIMIT_AS, &LIM);
+        //execute_cmd("chown judge *");
+        /*
+        while(setgid(GLOBALID) != 0) sleep(1);
+        while(setuid(GLOBALID) != 0) sleep(1);
+        while(setresuid(GLOBALID, GLOBALID, GLOBALID) != 0) sleep(1);
+        */
+
+        switch(lang) {
+            case LANGC:
+                execvp(CP_C[0], (char * const *) CP_C);
+                break;
+            case LANGCPP:
+                execvp(CP_CPP[0], (char * const *) CP_CPP);
+                break;
+            default:
+                printf("Nothing to do in compiling progress\n");
+                break;
+        }
+        if(DEBUG) {
+            printf("Compile finished\n");
+        }
+        exit(0);
+    }
+    else {
+        int status = 0;
+        waitpid(pid, &status, 0);
+        if(DEBUG) {
+            printf("status=%d\n", status);
+        }
+        return status;
+    }
+}
+
 int watch_solution(pid_t pidApp, int lang, int topmemory, int mem_lmt, int time_lmt) {
     int status, exitcode, sig;
     struct rusage ruse;
@@ -121,7 +219,7 @@ int watch_solution(pid_t pidApp, int lang, int topmemory, int mem_lmt, int time_
         if(tempmemory > topmemory) {
             topmemory = tempmemory;
         }
-        printf("%.2fMB\t%dMB\n", topmemory*1.0/STD_MB, mem_lmt);
+        //printf("%.2fMB\t%dMB\n", topmemory*1.0/STD_MB, mem_lmt);
         if(topmemory > mem_lmt * STD_MB) {
             if(DEBUG) {
                 printf("Out of memory %d\n", topmemory);
@@ -158,10 +256,118 @@ int watch_solution(pid_t pidApp, int lang, int topmemory, int mem_lmt, int time_
     return 0;
 }
 
+// out, user
+void find_next_nonspace(int &c1, int &c2, FILE *&f1, FILE *&f2, int &ret) {
+    while((isspace(c1) || isspace(c2))) {
+        if(c1 != c2) {
+            if(c2 == EOF) {
+                do {
+                    c1 = fgetc(f1);
+                }while(isspace(c1));
+                continue;
+            }
+            else if(c1 == EOF) {
+                do {
+                    c2 = fgetc(f2);
+                }while(isspace(c2));
+            }
+            else if ((c1 == '\r' && c2 == '\n')) {
+                c1 = fgetc(f1);
+            }
+            else {
+                ret = F_PE;
+            }
+        }
+        if(isspace(c1)) {
+            c1 = fgetc(f1);
+        }
+        if(isspace(c2)) {
+            c2 = fgetc(f2);
+        }
+    }
+}
+
+int compare_solution(const char* file1, const char* file2) {
+    int ret = F_AC;
+    int c1, c2;
+    FILE *f1, *f2;
+    f1 = fopen(file1, "re");
+    f2 = fopen(file2, "re");
+    if(!f1 || !f2) {
+        ret = F_RE;
+    }
+    else {
+        for(;;) {
+            c1 = fgetc(f1);
+            c2 = fgetc(f2);
+            find_next_nonspace(c1, c2, f1, f2, ret);
+            for(;;) {
+                while((!isspace(c1) && c1) || (!isspace(c2) && c2)) {
+                    if(c1 == EOF && c2 == EOF) {
+                        goto end;
+                    }
+                    if(c1 == EOF || c2 == EOF) {
+                        break;
+                    }
+                    if(c1 != c2) {
+                        ret = F_WA;
+                        goto end;
+                    }
+                    c1 = fgetc(f1);
+                    c2 = fgetc(f2);
+                }
+                find_next_nonspace(c1, c2, f1, f2, ret);
+                if(c1 == EOF && c2 == EOF) {
+                    goto end;
+                }
+                if(c1 == EOF || c2 == EOF) {
+                    ret = F_WA;
+                    goto end;
+                }
+                if((c1 == '\n' || !c1) && (c2 == '\n' || !c2)) {
+                    break;
+                }
+            }
+        }
+    }
+end:
+    // TODO
+    if(f1) fclose(f1);
+    if(f2) fclose(f2);
+    return ret;
+}
+
+int judge_solution() {
+    //compare_solution(const char* file1, const char* file2)
+    int cmp_ret = compare_solution("std.out", "user.out");
+    return cmp_ret;
+
+    switch(cmp_ret) {
+        case F_AC:
+            break;
+        case F_WA:
+            break;
+        case F_RE:
+            break;
+        case F_TLE:
+            break;
+        case F_PE:
+            break;
+        default:
+            break;
+    }
+}
+
 int main() {
     int mem_lmt = 32;   // 32MB
     int time_lmt = 1000;    // 1000ms
     int topmemory = 0;
+
+    int lang = LANGC;
+
+    if(ERROR == compile(lang)) {
+        return ERROR;
+    }
 
     pid_t pidApp = fork();
     if(pidApp == 0) {
@@ -169,5 +375,10 @@ int main() {
     }
     else {
         watch_solution(pidApp, LANGC, topmemory, mem_lmt, time_lmt);
+        int jdg_ret = judge_solution();
+        if(DEBUG) {
+            printf("Judge Result: %d\n", jdg_ret);
+        }
+        //update_solution(jdg_ret);
     }
 }
