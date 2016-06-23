@@ -10,6 +10,7 @@ type Problem struct {
 	Memory       string `bson:"memory" json:"memory"`
 	SimpleInput  string `bson:"simpleinput" json:"simpleinput"`
 	SimpleOutput string `bson:"simpleoutput" json:"simpleoutput"`
+	Display      bool
 }
 
 type User struct {
@@ -26,4 +27,6 @@ type Contest struct {
 	CID string
 	// pid1;pid2;pid3
 	ProblemList string `bson:"problemlist" json:"problemlist"`
+	StartTime   int64
+	EndTime     int64
 }

@@ -4,9 +4,13 @@ http://localhost:8090/contest?cid=1&&ipaddr=default
 http://localhost:8090/login?username=white&&ipaddr=default&password=123
 
 
+db.user.drop();
+db.problem.drop();
+db.contest.drop();
+
 db.user.insert({uid:'tj110', username:'white', password:'123', nickname:'nickname', ischallenger:false, score:1.00, privilege:'admin'});
-db.problem.insert({pid:'1', title:'title', description:'des', time:'1', memory:"1000", simpleinput:"input", simpleoutput:'output'});
-db.contest.insert({cid:'1', problemlist:'1;2;3'});
+db.problem.insert({pid:'1', title:'title', description:'des', time:'1', memory:"1000", simpleinput:"input", simpleoutput:'output', "display":false});
+db.contest.insert({cid:'1', problemlist:'1;2;3', starttime:1385131172, endtime: 1385132172});
 
 
 
@@ -18,6 +22,7 @@ type Problem struct {
 	Memory       string `bson:"memory" json:"memory"`
 	SimpleInput  string `bson:"simpleinput" json:"simpleinput"`
 	SimpleOutput string `bson:"simpleoutput" json:"simpleoutput"`
+	Display      bool
 }
 
 type User struct {
@@ -34,4 +39,6 @@ type Contest struct {
 	CID string
 	// pid1;pid2;pid3
 	ProblemList string `bson:"problemlist" json:"problemlist"`
+	StartTime   int64
+	EndTime     int64
 }
