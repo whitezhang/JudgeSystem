@@ -60,11 +60,6 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ok := isAuthorized(query)
-	if ok == false {
-		fmt.Fprintf(w, InfoHack)
-	}
-
 	// Get user info
 	if s, ok := query["username"]; ok {
 		userInfo, err = daomanage.GetUserInfo("username", s[0])
@@ -97,12 +92,6 @@ func problemHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ok := isAuthorized(query)
-	if ok == false {
-		fmt.Fprintf(w, InfoHack)
-		return
-	}
-
 	// Get problem info
 	if s, ok := query["pid"]; ok {
 		problemInfo, err = daomanage.GetProblemInfo(s[0])
@@ -115,31 +104,66 @@ func problemHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, InfoHack)
 }
 
-func contestHandler(w http.ResponseWriter, r *http.Request) {
+func contestsHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		query       url.Values
+		// query       url.Values
 		err         error
 		contestInfo daomanage.Contest
 	)
-	log.Println(r)
-	query, err = url.ParseQuery(r.URL.RawQuery)
-	log.Println(query)
+	// query, err = url.ParseQuery(r.URL.RawQuery)
 	if err != nil {
 		log.Println("Parse Error", err)
 		return
 	}
 
-	ok := isAuthorized(query)
-	if ok == false {
-		fmt.Fprintf(w, InfoHack)
+	// Get contests info
+	contestInfo, err = daomanage.GetContest("1")
+	if err == nil {
+		data, _ := json.Marshal(contestInfo)
+		fmt.Fprintf(w, string(data))
+		return
+	}
+	fmt.Fprintf(w, InfoHack)
+}
+
+func contestInfoHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		query       url.Values
+		err         error
+		contestInfo []daomanage.ContestProblem
+	)
+
+	type ContestProblem struct {
+		CID         string
+		ProblemName string
+		Solved      int64 `bson:"solved" json:"solved"`
+		Score       int64 `bson:"score" json:"score"`
+	}
+	var contestProblemList []ContestProblem
+
+	query, err = url.ParseQuery(r.URL.RawQuery)
+	fmt.Println("contest")
+	if err != nil {
+		log.Println("Parse Error", err)
 		return
 	}
 
 	// Get contest info
 	if s, ok := query["cid"]; ok {
-		contestInfo, err = daomanage.GetContest(s[0])
+		contestInfo, err = daomanage.GetContestProblems(s[0])
 		if err == nil {
-			data, _ := json.Marshal(contestInfo)
+			// data, _ := json.Marshal(contestInfo)
+			for _, problem := range contestInfo {
+				problemInfo, err := daomanage.GetProblemInfo(problem.PID)
+				if err != nil {
+					continue
+				}
+				fmt.Println(problemInfo)
+				singleProblemInfo := ContestProblem{problem.CID, problemInfo.Title, problem.Solved, problem.Score}
+				contestProblemList = append(contestProblemList, singleProblemInfo)
+			}
+			data, _ := json.Marshal(contestProblemList)
+			fmt.Printf("%s\n", data)
 			fmt.Fprintf(w, string(data))
 			return
 		}
@@ -159,11 +183,11 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ok := isAuthorized(query)
-	if ok == false {
-		fmt.Fprintf(w, InfoHack)
-		return
-	}
+	// ok := isAuthorized(query)
+	// if ok == false {
+	// 	fmt.Fprintf(w, InfoHack)
+	// 	return
+	// }
 
 	// Get user info
 	if s, ok := query["uid"]; ok {

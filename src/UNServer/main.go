@@ -30,12 +30,13 @@ func main() {
 	http.HandleFunc("/submit", submitPageHandler)
 
 	http.HandleFunc("/problem", singleProblemHandler)
-	http.HandleFunc("/contest", singleContestHandler)
+	http.HandleFunc("/contestinfo", singleContestHandler)
 
 	http.HandleFunc("/slogin", loginHandler)
 	http.HandleFunc("/suser", userHandler)
 	http.HandleFunc("/sproblem", problemHandler)
-	http.HandleFunc("/scontest", contestHandler)
+	http.HandleFunc("/scontestinfo", contestInfoHandler)
+	http.HandleFunc("/scontests", contestsHandler)
 	log.Printf("UN HTTP Server is listenting on %s\n", port)
 	http.Serve(lis, nil)
 }

@@ -6,42 +6,39 @@
 <link rel="stylesheet" type="text/css" href="/static/css/common.css">
 <script src="http://apps.bdimg.com/libs/angular.js/1.4.6/angular.min.js"></script>
 
-<div ng-app="myApp" ng-controller="customersCtrl">
 
-	<nav class="navbar navbar-default">
-		<div class="container-fluid">
-			<div class="navbar-header">
-				<a class="navbar-brand" href="/">UNProject - Doing</a>
-			</div>
-
-			<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-				<form class="navbar-form navbar-left">
-					Username:
-					<input type="text" class="form-control" ng-model="username">
-					Password:
-					<input type="password" class="form-control" ng-model="password">
-					<button type="submit" class="btn btn-default">Sign In</button>
-				</form>
-				<button class="btn btn-default btn-signup">Sign Up</button>
-			</div>
+<nav class="navbar navbar-default">
+	<div class="container-fluid">
+		<div class="navbar-header">
+			<a class="navbar-brand" href="/">UNProject - Doing</a>
 		</div>
-	</nav>
 
-	<div class="btn-toolbar first-block">
-		<div class="btn-group btn-group-justified">
-			<a href="/index" class="btn btn-default">HOME</a>
-			<a href="/problems" class="btn btn-default">PROBLEMSET</a>
-			<a href="/contests" class="btn btn-default">
-				CONTESTS&nbsp
-				<img src="/static/images/cup.png"></a>
-			<a href="/status" class="btn btn-default">STATUS</a>
-			<a href="/ratings" class="btn btn-default">RATING</a>
-			<a href="#" class="btn btn-default">HOMEWORK</a>
-			<a href="/about" class="btn btn-default">ABOUT</a>
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<form class="navbar-form navbar-left">
+				Username:
+				<input type="text" class="form-control" ng-model="username">
+				Password:
+				<input type="password" class="form-control" ng-model="password">
+				<button type="submit" class="btn btn-default">Sign In</button>
+			</form>
+			<button class="btn btn-default btn-signup">Sign Up</button>
 		</div>
 	</div>
+</nav>
 
-	
+<div class="btn-toolbar first-block">
+	<div class="btn-group btn-group-justified">
+		<a href="/index" class="btn btn-default">HOME</a>
+		<a href="/problems" class="btn btn-default">PROBLEMSET</a>
+		<a href="/contests" class="btn btn-default">
+			CONTESTS&nbsp
+			<img src="/static/images/cup.png"></a>
+		<a href="/status" class="btn btn-default">STATUS</a>
+		<a href="/ratings" class="btn btn-default">RATING</a>
+		<a href="#" class="btn btn-default">HOMEWORK</a>
+		<a href="/about" class="btn btn-default">ABOUT</a>
+	</div>
 </div>
+	
 </head>
 [[end]]

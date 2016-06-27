@@ -26,7 +26,15 @@ type User struct {
 type Contest struct {
 	CID string
 	// pid1;pid2;pid3
+	ContestName string `bson:"contestname" json:contestname`
 	ProblemList string `bson:"problemlist" json:"problemlist"`
-	StartTime   int64
-	EndTime     int64
+	StartTime   int64  `bson:"starttime" json:"starttime"`
+	EndTime     int64  `bson:"endtime" json:"endtime"`
+}
+
+type ContestProblem struct {
+	CID    string
+	PID    string
+	Solved int64 `bson:"solved" json:"solved"`
+	Score  int64 `bson:"score" json:"score"`
 }

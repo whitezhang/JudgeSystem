@@ -59,6 +59,25 @@ func GetContest(cid string) (contestInfo Contest, err error) {
 	return contestInfo, nil
 }
 
+func GetContestProblems(cid string) (contestInfo []ContestProblem, err error) {
+	session, err := mgo.Dial(hostName)
+	if err != nil {
+		log.Println("Connect MongoDB failed")
+		return []ContestProblem{}, err
+	}
+	defer session.Close()
+
+	session.SetMode(mgo.Monotonic, true)
+	collection := session.DB(dbName).C("contestproblemlist")
+
+	err = collection.Find(bson.M{"cid": cid}).All(&contestInfo)
+	if err != nil {
+		log.Printf("No Contest named: %s\n", cid)
+		return []ContestProblem{}, err
+	}
+	return contestInfo, nil
+}
+
 func GetProblemInfo(pid string) (problemInfo Problem, err error) {
 	session, err := mgo.Dial(hostName)
 	if err != nil {
