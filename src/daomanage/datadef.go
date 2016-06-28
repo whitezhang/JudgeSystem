@@ -3,7 +3,7 @@ package daomanage
 import ()
 
 type Problem struct {
-	PID          string
+	PID          int64
 	Title        string `bson:"title" json:"title"`
 	Description  string `bson:"description" json:"description"`
 	Time         string `bson:"time" json:"time"`
@@ -12,11 +12,12 @@ type Problem struct {
 	Output       string `bson:"output" json:"output"`
 	SimpleInput  string `bson:"simpleinput" json:"simpleinput"`
 	SimpleOutput string `bson:"simpleoutput" json:"simpleoutput"`
+	Solved       int64
 	Display      bool
 }
 
 type User struct {
-	UID          string
+	UID          int64
 	Username     string `bson:"username" json:"username"`
 	Password     string `bson:"password" json:"password"`
 	Nickname     string `bson:"nickname" json:"nickname"`
@@ -26,7 +27,7 @@ type User struct {
 }
 
 type Contest struct {
-	CID string
+	CID int64
 	// pid1;pid2;pid3
 	ContestName string `bson:"contestname" json:contestname`
 	ProblemList string `bson:"problemlist" json:"problemlist"`
@@ -35,8 +36,15 @@ type Contest struct {
 }
 
 type ContestProblem struct {
-	CID    string
-	PID    string
+	CID    int64
+	PID    int64
 	Solved int64 `bson:"solved" json:"solved"`
 	Score  int64 `bson:"score" json:"score"`
+}
+
+// Specific type
+type ProblemInfo struct {
+	PID         int64  `bson:"pid" json:"pid"`
+	ProblemName string `bson:"title" json:"title"`
+	Solved      int64  `bson:"solved" json:"solved"`
 }

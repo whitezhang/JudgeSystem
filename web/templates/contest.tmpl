@@ -15,7 +15,7 @@
 		<tbody>
 			<tr ng-repeat="problem in problemlist">
 				<td> {{ $index + 1 }} </td>
-				<td> <a href="/problem?pid={{ problem.PID }}">{{ problem.ProblemName }} </a></td>
+				<td> <a href="/problem?pid={{ problem.PID }}">{{ problem.problemname }} </a></td>
 				<td> {{ problem.solved }} </td>
 				<td> {{ problem.score }} </td>
 			</tr>

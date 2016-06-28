@@ -34,7 +34,8 @@ func main() {
 
 	http.HandleFunc("/slogin", loginHandler)
 	http.HandleFunc("/suser", userHandler)
-	http.HandleFunc("/sproblem", problemHandler)
+	http.HandleFunc("/sprobleminfo", problemInfoHandler)
+	http.HandleFunc("/sproblems", problemsHandler)
 	http.HandleFunc("/scontestinfo", contestInfoHandler)
 	http.HandleFunc("/scontests", contestsHandler)
 	log.Printf("UN HTTP Server is listenting on %s\n", port)

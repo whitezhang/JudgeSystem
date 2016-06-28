@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"service/auth"
+	"strconv"
 )
 
 const (
@@ -17,6 +18,8 @@ const (
 	InfoLoginSucc   = "Let's GO"
 
 	InfoHack = "What the fk r u looking for?"
+
+	PlbPerPage = 50
 )
 
 type ErrorInfo struct {
@@ -80,7 +83,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func problemHandler(w http.ResponseWriter, r *http.Request) {
+func problemInfoHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		query       url.Values
 		err         error
@@ -94,7 +97,11 @@ func problemHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get problem info
 	if s, ok := query["pid"]; ok {
-		problemInfo, err = daomanage.GetProblemInfo(s[0])
+		pid, err := strconv.ParseInt(s[0], 10, 64)
+		if err != nil {
+			return
+		}
+		problemInfo, err = daomanage.GetProblemInfo(pid)
 		if err == nil {
 			data, _ := json.Marshal(problemInfo)
 			fmt.Fprintf(w, string(data))
@@ -102,6 +109,41 @@ func problemHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	fmt.Fprintf(w, InfoHack)
+}
+
+func problemsHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		query url.Values
+		err   error
+	)
+	query, err = url.ParseQuery(r.URL.RawQuery)
+	if err != nil {
+		log.Println("Parse Error", err)
+		return
+	}
+
+	var page int64
+	if s, ok := query["page"]; ok {
+		if s[0] == "" {
+			page = 1
+		} else {
+			page, err = strconv.ParseInt(s[0], 10, 64)
+			if err != nil {
+				log.Println("re")
+				return
+			}
+		}
+	}
+	startIndex := PlbPerPage * (page - 1)
+	endIndex := startIndex + PlbPerPage
+
+	// Get Problems
+	problemInfoList, err := daomanage.GetProblemInRange(startIndex, endIndex)
+	if err == nil {
+		data, _ := json.Marshal(problemInfoList)
+		fmt.Fprintf(w, string(data))
+		return
+	}
 }
 
 func contestsHandler(w http.ResponseWriter, r *http.Request) {
@@ -117,7 +159,7 @@ func contestsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get contests info
-	contestInfo, err = daomanage.GetContest("1")
+	contestInfo, err = daomanage.GetContest(1)
 	if err == nil {
 		data, _ := json.Marshal(contestInfo)
 		fmt.Fprintf(w, string(data))
@@ -134,16 +176,15 @@ func contestInfoHandler(w http.ResponseWriter, r *http.Request) {
 	)
 
 	type ContestProblem struct {
-		CID         string
-		PID         string
-		ProblemName string
-		Solved      int64 `bson:"solved" json:"solved"`
-		Score       int64 `bson:"score" json:"score"`
+		CID         int64
+		PID         int64
+		ProblemName string `bson:"problemname" json:"problemname"`
+		Solved      int64  `bson:"solved" json:"solved"`
+		Score       int64  `bson:"score" json:"score"`
 	}
 	var contestProblemList []ContestProblem
 
 	query, err = url.ParseQuery(r.URL.RawQuery)
-	fmt.Println("contest")
 	if err != nil {
 		log.Println("Parse Error", err)
 		return
@@ -151,7 +192,11 @@ func contestInfoHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get contest info
 	if s, ok := query["cid"]; ok {
-		contestInfo, err = daomanage.GetContestProblems(s[0])
+		cid, err := strconv.ParseInt(s[0], 10, 64)
+		if err != nil {
+			return
+		}
+		contestInfo, err = daomanage.GetContestProblems(cid)
 		if err == nil {
 			// data, _ := json.Marshal(contestInfo)
 			for _, problem := range contestInfo {
@@ -159,7 +204,6 @@ func contestInfoHandler(w http.ResponseWriter, r *http.Request) {
 				if err != nil {
 					continue
 				}
-				fmt.Println(problemInfo)
 				singleProblemInfo := ContestProblem{problem.CID, problem.PID, problemInfo.Title, problem.Solved, problem.Score}
 				contestProblemList = append(contestProblemList, singleProblemInfo)
 			}

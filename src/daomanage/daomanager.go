@@ -40,7 +40,7 @@ func (man *Manager) initConf(cfgFile string) (err error) {
 	return
 }
 
-func GetContest(cid string) (contestInfo Contest, err error) {
+func GetContest(cid int64) (contestInfo Contest, err error) {
 	session, err := mgo.Dial(hostName)
 	if err != nil {
 		log.Println("Connect MongoDB failed")
@@ -59,7 +59,7 @@ func GetContest(cid string) (contestInfo Contest, err error) {
 	return contestInfo, nil
 }
 
-func GetContestProblems(cid string) (contestInfo []ContestProblem, err error) {
+func GetContestProblems(cid int64) (contestInfo []ContestProblem, err error) {
 	session, err := mgo.Dial(hostName)
 	if err != nil {
 		log.Println("Connect MongoDB failed")
@@ -78,7 +78,27 @@ func GetContestProblems(cid string) (contestInfo []ContestProblem, err error) {
 	return contestInfo, nil
 }
 
-func GetProblemInfo(pid string) (problemInfo Problem, err error) {
+func GetProblemInRange(startIndex, endIndex int64) (problemInfo []ProblemInfo, err error) {
+	session, err := mgo.Dial(hostName)
+	if err != nil {
+		log.Println("Connect MongoDB failed")
+		return []ProblemInfo{}, err
+	}
+	defer session.Close()
+
+	session.SetMode(mgo.Monotonic, true)
+	collection := session.DB(dbName).C("problem")
+
+	err = collection.Find(bson.M{"pid": bson.M{"$gte": startIndex, "$lte": endIndex}}).Select(bson.M{"pid": 1, "title": 1, "solved": 1}).All(&problemInfo)
+	log.Println("test", problemInfo)
+	if err != nil {
+		log.Printf("No Problem Indexing: from %d to %d\n", startIndex, endIndex)
+		return []ProblemInfo{}, err
+	}
+	return
+}
+
+func GetProblemInfo(pid int64) (problemInfo Problem, err error) {
 	session, err := mgo.Dial(hostName)
 	if err != nil {
 		log.Println("Connect MongoDB failed")
@@ -90,7 +110,6 @@ func GetProblemInfo(pid string) (problemInfo Problem, err error) {
 	collection := session.DB(dbName).C("problem")
 
 	err = collection.Find(bson.M{"pid": pid}).One(&problemInfo)
-	log.Println(problemInfo)
 	if err != nil {
 		log.Printf("No Problem named: %s\n", pid)
 		return Problem{}, err

@@ -28,9 +28,20 @@ app.controller('customersCtrl',
                     $scope.problemlist = response;
                 });
                 break;
+            case "problems":
+                var page = url.substring(url.lastIndexOf("=") + 1, url.length);
+                $http.get("http://localhost:8090/sproblems", {
+                    params: {
+                        page: page,
+                        ipaddr: "defalut"
+                    }
+                }).success(function(response) {
+                    $scope.problemlist = response;
+                });
+                break;
             case "problem":
                 var pid = url.substring(url.lastIndexOf("=") + 1, url.length);
-                $http.get("http://localhost:8090/sproblem", {
+                $http.get("http://localhost:8090/sprobleminfo", {
                     params: {
                         pid: pid,
                         ipaddr: "defalut"

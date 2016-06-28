@@ -2,7 +2,7 @@
 <html>
 	[[template "header"]]
 <body>
-
+<div ng-app="myApp" ng-controller="customersCtrl">
 	<table class="table table-striped table-hover second-block">
 		<thead>
 			<tr>
@@ -12,14 +12,14 @@
 			</tr>
 		</thead>
 		<tbody>
-			<tr>
-				<td>1</td>
-				<td><a href="/problem?pid=1">Column content</a></td>
-				<td>Column content</td>
+			<tr ng-repeat="problem in problemlist">
+				<td> {{ problem.pid }} </td>
+				<td> <a href="/problem?pid={{ problem.pid }}">{{ problem.title }} </a></td>
+				<td> {{ problem.solved }} </td>
 			</tr>
 		</tbody>
 	</table>
-
+</div>
 	<script src="/static/js/index.js"></script>
 </body>
 
