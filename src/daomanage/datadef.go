@@ -8,6 +8,8 @@ type Problem struct {
 	Description  string `bson:"description" json:"description"`
 	Time         string `bson:"time" json:"time"`
 	Memory       string `bson:"memory" json:"memory"`
+	Input        string `bson:"input" json:"input"`
+	Output       string `bson:"output" json:"output"`
 	SimpleInput  string `bson:"simpleinput" json:"simpleinput"`
 	SimpleOutput string `bson:"simpleoutput" json:"simpleoutput"`
 	Display      bool

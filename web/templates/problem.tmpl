@@ -2,26 +2,29 @@
 <html>
 	[[template "header"]]
 <body>
+<div ng-app="myApp" ng-controller="customersCtrl">
 	<div class="page-block">
 		<div class="block-title">
-			<h3>Title</h3>
-			<h6>Time limit:</h6>
-			<h6>Memory limit:</h6>
+			<h3>{{ title }}</h3>
+			<h6>Time limit: {{ time }}s</h6>
+			<h6>Memory limit: {{ memory }}KB</h6>
 		</div>
 		<div class="block-content">
 			<h4>Description</h4>
-			<div class="well">Look, I'm in a well!</div>
+			<div class="well">{{ description }}</div>
 			<h4>Input</h4>
-			<div class="well">Look, I'm in a well!</div>
+			<div class="well">{{ input }}</div>
 			<h4>Output</h4>
-			<div class="well">Look, I'm in a well!</div>
+			<div class="well">{{ output }}</div>
 			<h4>Simple Input</h4>
-			<div class="well">Look, I'm in a well!</div>
+			<div class="well">{{ simpleinput }}</div>
 			<h4>Simple Output</h4>
-			<div class="well">Look, I'm in a well!</div>
+			<div class="well">{{ simpleoutput }}</div>
 		</div>
 		<div><a href="/submit" class="btn btn-info btn-submit">Submit</a></div>
 	</div>
+</div>
+
 	<script src="/static/js/index.js"></script>
 </body>
 

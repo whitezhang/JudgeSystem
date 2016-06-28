@@ -135,6 +135,7 @@ func contestInfoHandler(w http.ResponseWriter, r *http.Request) {
 
 	type ContestProblem struct {
 		CID         string
+		PID         string
 		ProblemName string
 		Solved      int64 `bson:"solved" json:"solved"`
 		Score       int64 `bson:"score" json:"score"`
@@ -159,7 +160,7 @@ func contestInfoHandler(w http.ResponseWriter, r *http.Request) {
 					continue
 				}
 				fmt.Println(problemInfo)
-				singleProblemInfo := ContestProblem{problem.CID, problemInfo.Title, problem.Solved, problem.Score}
+				singleProblemInfo := ContestProblem{problem.CID, problem.PID, problemInfo.Title, problem.Solved, problem.Score}
 				contestProblemList = append(contestProblemList, singleProblemInfo)
 			}
 			data, _ := json.Marshal(contestProblemList)

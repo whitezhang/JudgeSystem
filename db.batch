@@ -1,7 +1,7 @@
-http://localhost:8090/user?uid=tj110&&ipaddr=default
-http://localhost:8090/problem?pid=1&&ipaddr=default
-http://localhost:8090/contest?cid=1&&ipaddr=default
-http://localhost:8090/login?username=white&&ipaddr=default&password=123
+http://localhost:8090/user?uid=tj110
+http://localhost:8090/problem?pid=1
+http://localhost:8090/contest?cid=1
+http://localhost:8090/login?username=white&&password=123
 
 http://localhost:8090/scontestinfo?cid=1
 
@@ -12,13 +12,15 @@ db.contest.drop();
 db.contestproblemlist.drop()
 
 db.user.insert({uid:'tj110', username:'white', password:'123', nickname:'nickname', ischallenger:false, score:1.00, privilege:'admin'});
-db.problem.insert({pid:'1', title:'title', description:'des', time:'1', memory:"1000", simpleinput:"input", simpleoutput:'output', "display":false});
-db.problem.insert({pid:'2', title:'title2', description:'des', time:'1', memory:"1000", simpleinput:"input", simpleoutput:'output', "display":false});
-db.problem.insert({pid:'3', title:'title3', description:'des', time:'1', memory:"1000", simpleinput:"input", simpleoutput:'output', "display":false});
+db.problem.insert({pid:'1', title:'title1', description:'des', time:'1', memory:"1000", input:"input", output:"output", simpleinput:"sinput", simpleoutput:'soutput', "display":false});
+db.problem.insert({pid:'2', title:'title2', description:'des', time:'1', memory:"1000", input:"input", output:"output", simpleinput:"sinput", simpleoutput:'soutput', "display":false});
+db.problem.insert({pid:'3', title:'title3', description:'des', time:'1', memory:"1000", input:"input", output:"output", simpleinput:"sinput", simpleoutput:'soutput', "display":false});
+db.problem.insert({pid:'4', title:'title4', description:'des', time:'1', memory:"1000", input:"input", output:"output", simpleinput:"sinput", simpleoutput:'soutput', "display":false});
 db.contest.insert({cid:'1', contestname:'Test contest', problemlist:'1;2;3;4', starttime:1385131172, endtime: 1385132172});
 db.contestproblemlist.insert({cid:'1', pid:'1', solved:2, score: 10});
 db.contestproblemlist.insert({cid:'1', pid:'2', solved:2, score: 10});
 db.contestproblemlist.insert({cid:'1', pid:'3', solved:2, score: 10});
+db.contestproblemlist.insert({cid:'1', pid:'4', solved:2, score: 10});
 
 
 type Problem struct {

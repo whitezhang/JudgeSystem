@@ -90,6 +90,7 @@ func GetProblemInfo(pid string) (problemInfo Problem, err error) {
 	collection := session.DB(dbName).C("problem")
 
 	err = collection.Find(bson.M{"pid": pid}).One(&problemInfo)
+	log.Println(problemInfo)
 	if err != nil {
 		log.Printf("No Problem named: %s\n", pid)
 		return Problem{}, err

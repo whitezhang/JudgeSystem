@@ -36,7 +36,15 @@ app.controller('customersCtrl',
                         ipaddr: "defalut"
                     }
                 }).success(function(response) {
-                    // $scope.problemlist = response.problemlist;
+                    $scope.PID = response.PID;
+                    $scope.title = response.title;
+                    $scope.description = response.description;
+                    $scope.input = response.input;
+                    $scope.output = response.output;
+                    $scope.time = response.time;
+                    $scope.memory = response.memory;
+                    $scope.simpleinput = response.simpleinput;
+                    $scope.simpleoutput = response.simpleoutput;
                 });
                 break;
         }
