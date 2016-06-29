@@ -19,6 +19,12 @@ type Manager struct {
 	mutex      *sync.Mutex
 }
 
+type ProblemInfo struct {
+	PID         int64  `bson:"pid" json:"pid"`
+	ProblemName string `bson:"title" json:"title"`
+	Solved      int64  `bson:"solved" json:"solved"`
+}
+
 func NewManager(cfgFile string) (man *Manager, err error) {
 	man = &Manager{}
 	man.serviceMap = make(map[string]string)
@@ -38,6 +44,25 @@ func (man *Manager) initConf(cfgFile string) (err error) {
 	dbName = cfg.Dao.DBName
 	log.Printf("Dao conf: %s:%s:%s\n", hostName, port, dbName)
 	return
+}
+
+func InsertSubmitQueue(pid int64, code string) (err error) {
+	session, err := mgo.Dial(hostName)
+	if err != nil {
+		log.Println("Connect MongoDB failed")
+		return err
+	}
+	defer session.Close()
+
+	session.SetMode(mgo.Monotonic, true)
+	collection := session.DB(dbName).C("submitqueue")
+
+	err = collection.Insert(&SubmitQueue{pid, code})
+	if err != nil {
+		log.Println("Error: Failed to insert into submit queue")
+		return err
+	}
+	return nil
 }
 
 func GetContest(cid int64) (contestInfo Contest, err error) {

@@ -38,6 +38,9 @@ func main() {
 	http.HandleFunc("/sproblems", problemsHandler)
 	http.HandleFunc("/scontestinfo", contestInfoHandler)
 	http.HandleFunc("/scontests", contestsHandler)
+
+	http.HandleFunc("/ssubmit", submitHandler)
+
 	log.Printf("UN HTTP Server is listenting on %s\n", port)
 	http.Serve(lis, nil)
 }

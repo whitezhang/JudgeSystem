@@ -42,9 +42,7 @@ type ContestProblem struct {
 	Score  int64 `bson:"score" json:"score"`
 }
 
-// Specific type
-type ProblemInfo struct {
-	PID         int64  `bson:"pid" json:"pid"`
-	ProblemName string `bson:"title" json:"title"`
-	Solved      int64  `bson:"solved" json:"solved"`
+type SubmitQueue struct {
+	PID  int64  `bson:"pid" json:"pid"`
+	Code string `bson:"code" json:"code"`
 }

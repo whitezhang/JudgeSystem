@@ -216,6 +216,19 @@ func contestInfoHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, InfoHack)
 }
 
+func submitHandler(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	pid := r.PostFormValue("pid")
+	code := r.PostFormValue("code")
+
+	npid, err := strconv.ParseInt(pid, 10, 64)
+	if err != nil {
+		log.Println("ParseInt Error", err)
+		return
+	}
+	daomanage.InsertSubmitQueue(npid, code)
+}
+
 func userHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		query    url.Values
