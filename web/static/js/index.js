@@ -12,7 +12,7 @@ app.controller('customersCtrl',
                         ipaddr: "defalut"
                     }
                 }).success(function(response) {
-                    $scope.contestName = response.ContestName;
+                    $scope.contestname = response.contestname;
                     $scope.starttime = response.starttime;
                     $scope.endtime = response.endtime;
                 });

@@ -176,8 +176,8 @@ func contestInfoHandler(w http.ResponseWriter, r *http.Request) {
 	)
 
 	type ContestProblem struct {
-		CID         int64
-		PID         int64
+		CID         int64  `bson:"cid" json:"cid"`
+		PID         int64  `bson:"pid" json:"pid"`
 		ProblemName string `bson:"problemname" json:"problemname"`
 		Solved      int64  `bson:"solved" json:"solved"`
 		Score       int64  `bson:"score" json:"score"`

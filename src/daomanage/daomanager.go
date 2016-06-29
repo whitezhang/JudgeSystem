@@ -90,7 +90,6 @@ func GetProblemInRange(startIndex, endIndex int64) (problemInfo []ProblemInfo, e
 	collection := session.DB(dbName).C("problem")
 
 	err = collection.Find(bson.M{"pid": bson.M{"$gte": startIndex, "$lte": endIndex}}).Select(bson.M{"pid": 1, "title": 1, "solved": 1}).All(&problemInfo)
-	log.Println("test", problemInfo)
 	if err != nil {
 		log.Printf("No Problem Indexing: from %d to %d\n", startIndex, endIndex)
 		return []ProblemInfo{}, err
@@ -129,7 +128,6 @@ func GetUserInfo(key, value string) (userInfo User, err error) {
 	collection := session.DB(dbName).C("user")
 
 	err = collection.Find(bson.M{key: value}).One(&userInfo)
-	// log.Println(userInfo)
 	if err != nil {
 		log.Printf("No User %s: %s\n", key, value)
 		return User{}, err
