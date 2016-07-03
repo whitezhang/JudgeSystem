@@ -10,6 +10,7 @@ Dev
 - C/C++
 
 ### How to use
+You'd better build this JudgeSystem in a cleaned Centos System, such as Docker.
 ```sh 
 sh -x prepare_env.sh
 sh -x build.sh
