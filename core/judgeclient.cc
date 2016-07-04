@@ -14,11 +14,16 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <sys/signal.h>
-//#include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-//#include <mysql/mysql.h>
 #include <assert.h>
+#include <ctime>
+#include <fstream>
+
+#include "mongo/client/dbclient.h"
+#include <sys/stat.h>
+
+using namespace std;
 
 const int LANGC = 1;
 const int LANGCPP = 2;
@@ -358,7 +363,56 @@ int judge_solution() {
     }
 }
 
-int main() {
+void mkdir_if_not_exist(char *pathname) {
+    mkdir(pathname, 0777);
+}
+
+void run() { 
+    mongo::DBClientConnection c;
+    mongo::BSONObj cur_obj;
+    c.connect("localhost");
+    auto_ptr<mongo::DBClientCursor> cursor = c.query("unsys.submitqueue", mongo::BSONObj());
+    while(cursor->more()) {
+        time_t t;
+        int timestamp = time(&t);
+        char pathname[128];
+        sprintf(pathname, "%s/%d/", RMPATH, timestamp);
+
+        int pid;
+        const char *code, *lang;
+
+        cur_obj = cursor->next();
+        pid = cur_obj.getIntField("pid");
+        code = cur_obj.getStringField("code");
+        lang = cur_obj.getStringField("lang");
+
+        mkdir_if_not_exist(pathname);
+        if(!strcmp(lang, "c")) { 
+            strcat(pathname, "main.c");
+        }       
+        else if(!strcmp(lang, "cpp")) {
+            strcat(pathname, "main.cpp");
+        }       
+        printf("%s\n", pathname);
+        ofstream fout(pathname);
+        fout << code;
+        fout << flush;
+        fout.close();
+    }
+}
+
+int process_smtqueue() {
+    mongo::client::initialize();
+    try {
+        run();
+        printf("ok\n");
+    } catch( const mongo::DBException &e) {
+        printf("err\n");
+    }
+    return EXIT_SUCCESS;
+}
+
+int test_main() {
     int mem_lmt = 32;   // 32MB
     int time_lmt = 1000;    // 1000ms
     int topmemory = 0;
@@ -381,4 +435,9 @@ int main() {
         }
         //update_solution(jdg_ret);
     }
+}
+
+int main() {
+    process_smtqueue();
+    test_main();
 }

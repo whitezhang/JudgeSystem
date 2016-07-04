@@ -21,6 +21,7 @@ db.contestproblemlist.insert({cid:1, pid:1, solved:2, score: 10});
 db.contestproblemlist.insert({cid:1, pid:2, solved:2, score: 10});
 db.contestproblemlist.insert({cid:1, pid:3, solved:2, score: 10});
 db.contestproblemlist.insert({cid:1, pid:4, solved:2, score: 10});
+db.submitqueue.insert({pid:1, code:"hello", lang:"c"});
 
 
 type Problem struct {
