@@ -36,6 +36,7 @@ const int SUCCESS = 1;
 const int ERROR = 1;
 
 const int GLOBALID = 1536;
+const char *RMPATH = "/home/workspace/runtime";
 
 const int F_AC = 0;
 const int F_WA = 1;
