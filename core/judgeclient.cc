@@ -37,12 +37,19 @@ const int ERROR = 1;
 
 const int GLOBALID = 1536;
 const char *RMPATH = "/home/workspace/runtime";
+const int  JUDGE_THREAD = 128;
 
 const int F_AC = 0;
 const int F_WA = 1;
 const int F_RE = 2;
 const int F_TLE = 3;
 const int F_PE = 4;
+
+typedef struct problem_runtime {
+    char *pathname;
+    char *filename;
+    char *lang;
+}problem_runtime;
 
 int execute_cmd(const char *fmt, ...) {
     char cmd[BUFFER_SIZE];
@@ -57,7 +64,6 @@ int execute_cmd(const char *fmt, ...) {
 
 void run_solution(int runid, int clientid) {
     nice(19);
-    //chdir(WORK_DIR);
     //freopen("data.in", "r", stdin);
     freopen("user.out", "w", stdout);
     freopen("error.out", "a+", stderr);
@@ -97,7 +103,6 @@ void run_solution(int runid, int clientid) {
 
     sprintf(runidstr, "%d", runid);
     sprintf(buf, "%d", clientid);
-    //*/
 
     // run client
     //execl("./test", "test", "" , NULL);
@@ -368,7 +373,8 @@ void mkdir_if_not_exist(char *pathname) {
     mkdir(pathname, 0777);
 }
 
-void run() { 
+void mv_code2runtime(problem_runtime *pr_list[JUDGE_THREAD]) { 
+    int index = 0;
     mongo::DBClientConnection c;
     mongo::BSONObj cur_obj;
     c.connect("localhost");
@@ -388,42 +394,49 @@ void run() {
         lang = cur_obj.getStringField("lang");
 
         mkdir_if_not_exist(pathname);
+        strcpy(pr_list[index]->pathname, pathname);
+        strcpy(pr_list[index]->lang, lang);
         if(!strcmp(lang, "c")) { 
             strcat(pathname, "main.c");
         }       
         else if(!strcmp(lang, "cpp")) {
             strcat(pathname, "main.cpp");
         }       
-        printf("%s\n", pathname);
         ofstream fout(pathname);
         fout << code;
         fout << flush;
         fout.close();
+
+        strcpy(pr_list[index]->filename, pathname);
+        index++;
     }
 }
 
-int process_smtqueue() {
+int process_smtqueue(problem_runtime *pr_list[JUDGE_THREAD]) {
     mongo::client::initialize();
     try {
-        run();
-        printf("ok\n");
+        mv_code2runtime(pr_list);
     } catch( const mongo::DBException &e) {
-        printf("err\n");
+        printf("connection err\n");
     }
     return EXIT_SUCCESS;
 }
 
-int test_main() {
+int process_single_submit(problem_runtime *pr_list) {
     int mem_lmt = 32;   // 32MB
     int time_lmt = 1000;    // 1000ms
     int topmemory = 0;
 
     int lang = LANGC;
+    int i = 0;
 
+    if(DEBUG) {
+        printf("chdir to %s\n", pr_list->pathname);
+    }
+    chdir(pr_list->pathname);
     if(ERROR == compile(lang)) {
         return ERROR;
     }
-
     pid_t pidApp = fork();
     if(pidApp == 0) {
         run_solution(1, 1);
@@ -438,7 +451,25 @@ int test_main() {
     }
 }
 
+void process_all_submits(problem_runtime *pr_list[JUDGE_THREAD]) {
+    for(int i = 0; i < JUDGE_THREAD; i++) {
+        if(pr_list[i]->pathname == 0) continue;
+        process_single_submit(pr_list[i]);
+    }
+}
+
+void init_runtime(problem_runtime *pr_list[JUDGE_THREAD]) {
+    for(int i = 0; i < JUDGE_THREAD; i++) {
+        pr_list[i] = (problem_runtime*)malloc(sizeof(problem_runtime));
+        pr_list[i]->pathname = (char*)malloc(sizeof(char) * 128);
+        pr_list[i]->filename = (char*)malloc(sizeof(char) * 128);
+        pr_list[i]->lang = (char*)malloc(sizeof(char) * 64);
+    }
+}
+
 int main() {
-    process_smtqueue();
-    test_main();
+    problem_runtime *pr_list[JUDGE_THREAD];
+    init_runtime(pr_list);
+    process_smtqueue(pr_list);
+    process_all_submits(pr_list);
 }
