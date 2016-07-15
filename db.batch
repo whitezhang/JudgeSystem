@@ -10,6 +10,7 @@ db.user.drop();
 db.problem.drop();
 db.contest.drop();
 db.contestproblemlist.drop()
+db.submitqueue.drop()
 
 db.user.insert({uid:'tj110', username:'white', password:'123', nickname:'nickname', ischallenger:false, score:1.00, privilege:'admin'});
 db.problem.insert({pid:1, title:'title1', description:'des', time:'1', memory:"1000", input:"input", output:"output", simpleinput:"sinput", simpleoutput:'soutput', "solved":10, "display":false});
@@ -22,6 +23,8 @@ db.contestproblemlist.insert({cid:1, pid:2, solved:2, score: 10});
 db.contestproblemlist.insert({cid:1, pid:3, solved:2, score: 10});
 db.contestproblemlist.insert({cid:1, pid:4, solved:2, score: 10});
 db.submitqueue.insert({pid:1, code:"hello", lang:"c"});
+db.submitqueue.insert({pid:1, code:"hello", lang:"c"});
+
 
 
 type Problem struct {

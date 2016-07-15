@@ -106,7 +106,6 @@ void run_solution(int runid, int clientid) {
 
     // run client
     //execl("./test", "test", "" , NULL);
-    //execl("./main < in.txt", "main", "" , NULL);
     execl("./Main", "Main", "" , NULL);
 }
 
@@ -383,7 +382,7 @@ void mv_code2runtime(problem_runtime *pr_list[JUDGE_THREAD]) {
         time_t t;
         int timestamp = time(&t);
         char pathname[128];
-        sprintf(pathname, "%s/%d/", RMPATH, timestamp);
+        sprintf(pathname, "%s/%d_%d/", RMPATH, timestamp, index);
 
         int pid;
         const char *code, *lang;
@@ -397,10 +396,10 @@ void mv_code2runtime(problem_runtime *pr_list[JUDGE_THREAD]) {
         strcpy(pr_list[index]->pathname, pathname);
         strcpy(pr_list[index]->lang, lang);
         if(!strcmp(lang, "c")) { 
-            strcat(pathname, "main.c");
+            strcat(pathname, "Main.c");
         }       
         else if(!strcmp(lang, "cpp")) {
-            strcat(pathname, "main.cpp");
+            strcat(pathname, "Main.cpp");
         }       
         ofstream fout(pathname);
         fout << code;
@@ -453,7 +452,7 @@ int process_single_submit(problem_runtime *pr_list) {
 
 void process_all_submits(problem_runtime *pr_list[JUDGE_THREAD]) {
     for(int i = 0; i < JUDGE_THREAD; i++) {
-        if(pr_list[i]->pathname == 0) continue;
+        if(pr_list[i]->pathname[0] == '\0') continue;
         process_single_submit(pr_list[i]);
     }
 }
