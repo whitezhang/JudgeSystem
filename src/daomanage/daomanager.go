@@ -46,7 +46,7 @@ func (man *Manager) initConf(cfgFile string) (err error) {
 	return
 }
 
-func InsertSubmitQueue(pid int64, code string) (err error) {
+func InsertSubmitQueue(pid int64, code string, lang string) (err error) {
 	session, err := mgo.Dial(hostName)
 	if err != nil {
 		log.Println("Connect MongoDB failed")
@@ -57,7 +57,7 @@ func InsertSubmitQueue(pid int64, code string) (err error) {
 	session.SetMode(mgo.Monotonic, true)
 	collection := session.DB(dbName).C("submitqueue")
 
-	err = collection.Insert(&SubmitQueue{pid, code})
+	err = collection.Insert(&SubmitQueue{pid, code, lang})
 	if err != nil {
 		log.Println("Error: Failed to insert into submit queue")
 		return err

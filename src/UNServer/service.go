@@ -220,13 +220,14 @@ func submitHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	pid := r.PostFormValue("pid")
 	code := r.PostFormValue("code")
+	lang := r.PostFormValue("lang")
 
 	npid, err := strconv.ParseInt(pid, 10, 64)
 	if err != nil {
 		log.Println("ParseInt Error", err)
 		return
 	}
-	daomanage.InsertSubmitQueue(npid, code)
+	daomanage.InsertSubmitQueue(npid, code, lang)
 }
 
 func userHandler(w http.ResponseWriter, r *http.Request) {

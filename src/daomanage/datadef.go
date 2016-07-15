@@ -45,4 +45,5 @@ type ContestProblem struct {
 type SubmitQueue struct {
 	PID  int64  `bson:"pid" json:"pid"`
 	Code string `bson:"code" json:"code"`
+	Lang string `bson:"lang" json:"lang"`
 }
