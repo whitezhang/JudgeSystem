@@ -11,6 +11,7 @@ db.problem.drop();
 db.contest.drop();
 db.contestproblemlist.drop()
 db.submitqueue.drop()
+db.runtimestatus.drop()
 
 db.user.insert({uid:'tj110', username:'white', password:'123', nickname:'nickname', ischallenger:false, score:1.00, privilege:'admin'});
 db.problem.insert({pid:1, title:'title1', description:'des', time:'1', memory:"1000", input:"input", output:"output", simpleinput:"sinput", simpleoutput:'soutput', "solved":10, "display":false});
@@ -22,9 +23,8 @@ db.contestproblemlist.insert({cid:1, pid:1, solved:2, score: 10});
 db.contestproblemlist.insert({cid:1, pid:2, solved:2, score: 10});
 db.contestproblemlist.insert({cid:1, pid:3, solved:2, score: 10});
 db.contestproblemlist.insert({cid:1, pid:4, solved:2, score: 10});
-db.submitqueue.insert({pid:1, code:"hello", lang:"c"});
-db.submitqueue.insert({pid:2, code:"#include <stdio.h> int main() {printf(\"hello\n\");return 0;}", lang:"c"});
-db.submitqueue.insert({pid:2, code:"#include <stdio.h>\r\nint main() {\r\nreturn 0;\r\n}", lang:"c"});
+db.submitqueue.insert({"pid":1, "code":"#include <stdio.h>\r\nint main() {\r\nreturn 0;\r\n}", "lang":"C"});
+db.runtimestatus.insert({pid:2, "_index" : "578a0e70c199c609ad738ca1", status:"pending", memory:"pending", time:"pending", code:"#include <stdio\r\nint main() {\r\nreturn 0;\r\n}", lang:"c"});
 
 
 
@@ -55,6 +55,15 @@ type Contest struct {
 	ProblemList string `bson:"problemlist" json:"problemlist"`
 	StartTime   int64
 	EndTime     int64
+}
+
+type RuntimeStatus struct {
+	PID    int64  `bson:"pid" json:"pid"`
+	Status string `bson:"status" json:"status"`
+	Code   string `bson:"code" json:"code"`
+	Memory string `bson:"memory" json:"memory"`
+	Time   string `bson:"time" json:"time"`
+	Lang   string `bson:"lang" json:"lang"`
 }
 
 #include <stdio.h>

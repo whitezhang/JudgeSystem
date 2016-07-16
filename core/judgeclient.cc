@@ -51,6 +51,7 @@ typedef struct problem_runtime {
     char *pathname;
     char *filename;
     char *lang;
+    char *oid;
     int pid;
 }problem_runtime;
 
@@ -202,7 +203,7 @@ int compile(int lang) {
     }
 }
 
-int watch_runtime(pid_t pidApp, int lang, int topmemory, int mem_lmt, int time_lmt) {
+int watch_runtime(pid_t pidApp, int lang, int topmemory, int mem_lmt, int time_lmt, int *mem_peak, int *time_used) {
     int status, exitcode, sig;
     struct rusage ruse;
     struct user_regs_struct reg;
@@ -227,6 +228,9 @@ int watch_runtime(pid_t pidApp, int lang, int topmemory, int mem_lmt, int time_l
             if(DEBUG) {
                 printf("VmPeak:%d KB\n", tempmemory);
             }
+        }
+        if(tempmemory > *mem_peak) {
+            *mem_peak = tempmemory;
         }
 
         if(tempmemory > topmemory) {
@@ -257,6 +261,7 @@ int watch_runtime(pid_t pidApp, int lang, int topmemory, int mem_lmt, int time_l
         }
         usedtime += (ruse.ru_utime.tv_sec * 1000 + ruse.ru_utime.tv_usec / 1000);
         usedtime += (ruse.ru_stime.tv_sec * 1000 + ruse.ru_stime.tv_usec / 1000);
+        *time_used = usedtime;
         if(usedtime >= time_lmt) {
             ptrace(PTRACE_KILL, pidApp, NULL, NULL);
             break;
@@ -380,6 +385,8 @@ void mv_code2runtime(problem_runtime *pr_list[JUDGE_THREAD]) {
     int index = 0;
     mongo::DBClientConnection c;
     mongo::BSONObj cur_obj;
+    mongo::BSONElement cur_ele;
+    mongo::OID objectID;
     c.connect("localhost");
     auto_ptr<mongo::DBClientCursor> cursor = c.query("unsys.submitqueue", mongo::BSONObj());
     while(cursor->more()) {
@@ -389,23 +396,28 @@ void mv_code2runtime(problem_runtime *pr_list[JUDGE_THREAD]) {
         sprintf(pathname, "%s/%d_%d/", RM_PATH, timestamp, index);
 
         int pid;
-        const char *code, *lang;
+        const char *code, *lang, *oid;
 
         cur_obj = cursor->next();
+        cur_obj.getObjectID(cur_ele);
+        objectID = cur_ele.__oid();
+
+        oid = objectID.toString().c_str();
         pid = cur_obj.getIntField("pid");
-        code = cur_obj.getStringField("code");
+        code= cur_obj.getStringField("code");
         lang = cur_obj.getStringField("lang");
 
         mkdir_if_not_exist(pathname);
         strcpy(pr_list[index]->pathname, pathname);
         strcpy(pr_list[index]->lang, lang);
+        strcpy(pr_list[index]->oid, oid);
         pr_list[index]->pid = pid;
-        if(!strcmp(lang, "c")) { 
+        if(!strcmp(lang, "C")) { 
             strcat(pathname, "Main.c");
-        }       
-        else if(!strcmp(lang, "cpp")) {
+        }
+        else if(!strcmp(lang, "CPP")) {
             strcat(pathname, "Main.cpp");
-        }       
+        }
         ofstream fout(pathname);
         fout << code;
         fout << flush;
@@ -420,10 +432,31 @@ int process_smtqueue(problem_runtime *pr_list[JUDGE_THREAD]) {
     mongo::client::initialize();
     try {
         mv_code2runtime(pr_list);
-    } catch( const mongo::DBException &e) {
+    } catch(const mongo::DBException &e) {
         printf("connection err\n");
     }
     return EXIT_SUCCESS;
+}
+
+void update_solution(const char *oid, const int jdg_ret, const int mem_peak, const int time_used) {
+    mongo::client::initialize();
+    printf("start\n");
+    try {
+        mongo::DBClientConnection c;
+        mongo::BSONObj cur_obj;
+        mongo::BSONObjBuilder update_field;
+        mongo::BSONObjBuilder set_field;
+        update_field.append("status", "AC");
+        update_field.append("memory", "1");
+        update_field.append("time", "2");
+        set_field.append("$set", update_field.obj());
+
+        c.connect("localhost");
+        c.update("unsys.runtimestatus", BSON("_index"<< *oid), set_field.obj(), false, false);
+        printf("done\n");
+    } catch(const mongo::DBException &e) {
+        printf("connection err\n");
+    }
 }
 
 int process_single_submit(problem_runtime *pr_list) {
@@ -446,12 +479,15 @@ int process_single_submit(problem_runtime *pr_list) {
         run_solution(1, 1);
     }
     else {
-        watch_runtime(pidApp, LANGC, topmemory, mem_lmt, time_lmt);
-        int jdg_ret = judge_solution(pr_list->pid);
+        int mem_peak, time_used;
+        int jdg_ret;
+        mem_peak = time_used = 0;
+        watch_runtime(pidApp, LANGC, topmemory, mem_lmt, time_lmt, &mem_peak, &time_used);
+        jdg_ret = judge_solution(pr_list->pid);
         if(DEBUG) {
-            printf("Judge Result: %d\n", jdg_ret);
+            printf("Judge Result in Progress: %d\n", jdg_ret);
         }
-        //update_solution(jdg_ret);
+        update_solution(pr_list->oid, jdg_ret, mem_peak, time_used);
         return jdg_ret;
     }
 }
@@ -470,6 +506,7 @@ void init_runtime(problem_runtime *pr_list[JUDGE_THREAD]) {
         pr_list[i]->pathname = (char*)malloc(sizeof(char) * 128);
         pr_list[i]->filename = (char*)malloc(sizeof(char) * 128);
         pr_list[i]->lang = (char*)malloc(sizeof(char) * 64);
+        pr_list[i]->oid = (char*)malloc(sizeof(char) * 64);
         pr_list[i]->pid = -1;
     }
 }

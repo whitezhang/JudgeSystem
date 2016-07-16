@@ -47,6 +47,7 @@ func (man *Manager) initConf(cfgFile string) (err error) {
 }
 
 func InsertSubmitQueue(pid int64, code string, lang string) (err error) {
+	var exSbtQue []ExSubmitQueue
 	session, err := mgo.Dial(hostName)
 	if err != nil {
 		log.Println("Connect MongoDB failed")
@@ -55,12 +56,25 @@ func InsertSubmitQueue(pid int64, code string, lang string) (err error) {
 	defer session.Close()
 
 	session.SetMode(mgo.Monotonic, true)
-	collection := session.DB(dbName).C("submitqueue")
+	sbtCollection := session.DB(dbName).C("submitqueue")
+	rsCollection := session.DB(dbName).C("runtimestatus")
 
-	err = collection.Insert(&SubmitQueue{pid, code, lang})
+	err = sbtCollection.Insert(&SubmitQueue{pid, code, lang})
 	if err != nil {
-		log.Println("Error: Failed to insert into submit queue")
+		log.Println("Error: Failed in submition")
 		return err
+	}
+	err = sbtCollection.Find(bson.M{"pid": pid, "code": code, "lang": lang}).All(&exSbtQue)
+	if err != nil {
+		log.Println("Error: Failed in submition")
+		return err
+	}
+	for _, submition := range exSbtQue {
+		err = rsCollection.Insert(&RuntimeStatus{submition.ID.Hex(), pid, "Pending", code, "Pending", "Pending", lang})
+		if err != nil {
+			log.Println("Error: Failed in submition")
+			continue
+		}
 	}
 	return nil
 }

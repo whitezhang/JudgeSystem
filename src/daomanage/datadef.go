@@ -1,6 +1,8 @@
 package daomanage
 
-import ()
+import (
+	"gopkg.in/mgo.v2/bson"
+)
 
 type Problem struct {
 	PID          int64  `bson:"pid" json:"pid"`
@@ -46,4 +48,21 @@ type SubmitQueue struct {
 	PID  int64  `bson:"pid" json:"pid"`
 	Code string `bson:"code" json:"code"`
 	Lang string `bson:"lang" json:"lang"`
+}
+
+type ExSubmitQueue struct {
+	ID   bson.ObjectId `bson:"_id" json:"_id"`
+	PID  int64         `bson:"pid" json:"pid"`
+	Code string        `bson:"code" json:"code"`
+	Lang string        `bson:"lang" json:"lang"`
+}
+
+type RuntimeStatus struct {
+	Index  string `bson:"_index" json:"_index"`
+	PID    int64  `bson:"pid" json:"pid"`
+	Status string `bson:"status" json:"status"`
+	Code   string `bson:"code" json:"code"`
+	Memory string `bson:"memory" json:"memory"`
+	Time   string `bson:"time" json:"time"`
+	Lang   string `bson:"lang" json:"lang"`
 }
