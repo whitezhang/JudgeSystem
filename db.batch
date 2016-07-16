@@ -24,6 +24,7 @@ db.contestproblemlist.insert({cid:1, pid:3, solved:2, score: 10});
 db.contestproblemlist.insert({cid:1, pid:4, solved:2, score: 10});
 db.submitqueue.insert({pid:1, code:"hello", lang:"c"});
 db.submitqueue.insert({pid:2, code:"#include <stdio.h> int main() {printf(\"hello\n\");return 0;}", lang:"c"});
+db.submitqueue.insert({pid:2, code:"#include <stdio.h>\r\nint main() {\r\nreturn 0;\r\n}", lang:"c"});
 
 
 
@@ -54,4 +55,9 @@ type Contest struct {
 	ProblemList string `bson:"problemlist" json:"problemlist"`
 	StartTime   int64
 	EndTime     int64
+}
+
+#include <stdio.h>
+int main() {
+return 0;
 }

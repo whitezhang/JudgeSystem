@@ -32,11 +32,12 @@ const int DEBUG = 1;
 const int STD_MB = 1024*1024;
 const int BUFFER_SIZE = 1024;
 
-const int SUCCESS = 1;
+const int SUCCESS = 0;
 const int ERROR = 1;
 
-const int GLOBALID = 1536;
-const char *RMPATH = "/home/workspace/runtime";
+const int GLOBAL_ID = 1536;
+const char *RM_PATH = "/home/workspace/runtime";
+const char *DATA_PATH = "/home/workspace/data";
 const int  JUDGE_THREAD = 128;
 
 const int F_AC = 0;
@@ -44,11 +45,13 @@ const int F_WA = 1;
 const int F_RE = 2;
 const int F_TLE = 3;
 const int F_PE = 4;
+const int F_CE = 5;
 
 typedef struct problem_runtime {
     char *pathname;
     char *filename;
     char *lang;
+    int pid;
 }problem_runtime;
 
 int execute_cmd(const char *fmt, ...) {
@@ -168,9 +171,9 @@ int compile(int lang) {
         setrlimit(RLIMIT_AS, &LIM);
         //execute_cmd("chown judge *");
         /*
-        while(setgid(GLOBALID) != 0) sleep(1);
-        while(setuid(GLOBALID) != 0) sleep(1);
-        while(setresuid(GLOBALID, GLOBALID, GLOBALID) != 0) sleep(1);
+        while(setgid(GLOBAL_ID) != 0) sleep(1);
+        while(setuid(GLOBAL_ID) != 0) sleep(1);
+        while(setresuid(GLOBAL_ID, GLOBAL_ID, GLOBAL_ID) != 0) sleep(1);
         */
 
         switch(lang) {
@@ -199,7 +202,7 @@ int compile(int lang) {
     }
 }
 
-int watch_solution(pid_t pidApp, int lang, int topmemory, int mem_lmt, int time_lmt) {
+int watch_runtime(pid_t pidApp, int lang, int topmemory, int mem_lmt, int time_lmt) {
     int status, exitcode, sig;
     struct rusage ruse;
     struct user_regs_struct reg;
@@ -347,9 +350,10 @@ end:
     return ret;
 }
 
-int judge_solution() {
-    //compare_solution(const char* file1, const char* file2)
-    int cmp_ret = compare_solution("std.out", "user.out");
+int judge_solution(int pid) {
+    char std_out_pathname[128];
+    sprintf(std_out_pathname, "%s/%d/std.out", DATA_PATH, pid);
+    int cmp_ret = compare_solution(std_out_pathname, "user.out");
     return cmp_ret;
 
     switch(cmp_ret) {
@@ -382,7 +386,7 @@ void mv_code2runtime(problem_runtime *pr_list[JUDGE_THREAD]) {
         time_t t;
         int timestamp = time(&t);
         char pathname[128];
-        sprintf(pathname, "%s/%d_%d/", RMPATH, timestamp, index);
+        sprintf(pathname, "%s/%d_%d/", RM_PATH, timestamp, index);
 
         int pid;
         const char *code, *lang;
@@ -395,6 +399,7 @@ void mv_code2runtime(problem_runtime *pr_list[JUDGE_THREAD]) {
         mkdir_if_not_exist(pathname);
         strcpy(pr_list[index]->pathname, pathname);
         strcpy(pr_list[index]->lang, lang);
+        pr_list[index]->pid = pid;
         if(!strcmp(lang, "c")) { 
             strcat(pathname, "Main.c");
         }       
@@ -433,27 +438,29 @@ int process_single_submit(problem_runtime *pr_list) {
         printf("chdir to %s\n", pr_list->pathname);
     }
     chdir(pr_list->pathname);
-    if(ERROR == compile(lang)) {
-        return ERROR;
+    if(SUCCESS != compile(lang)) {
+        return F_CE;
     }
     pid_t pidApp = fork();
     if(pidApp == 0) {
         run_solution(1, 1);
     }
     else {
-        watch_solution(pidApp, LANGC, topmemory, mem_lmt, time_lmt);
-        int jdg_ret = judge_solution();
+        watch_runtime(pidApp, LANGC, topmemory, mem_lmt, time_lmt);
+        int jdg_ret = judge_solution(pr_list->pid);
         if(DEBUG) {
             printf("Judge Result: %d\n", jdg_ret);
         }
         //update_solution(jdg_ret);
+        return jdg_ret;
     }
 }
 
 void process_all_submits(problem_runtime *pr_list[JUDGE_THREAD]) {
     for(int i = 0; i < JUDGE_THREAD; i++) {
         if(pr_list[i]->pathname[0] == '\0') continue;
-        process_single_submit(pr_list[i]);
+        int retval = process_single_submit(pr_list[i]);
+        printf("Judge Result: %d\n", retval);
     }
 }
 
@@ -463,6 +470,7 @@ void init_runtime(problem_runtime *pr_list[JUDGE_THREAD]) {
         pr_list[i]->pathname = (char*)malloc(sizeof(char) * 128);
         pr_list[i]->filename = (char*)malloc(sizeof(char) * 128);
         pr_list[i]->lang = (char*)malloc(sizeof(char) * 64);
+        pr_list[i]->pid = -1;
     }
 }
 
