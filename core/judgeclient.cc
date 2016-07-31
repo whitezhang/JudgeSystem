@@ -48,6 +48,8 @@ const int F_TLE = 3;
 const int F_PE = 4;
 const int F_CE = 5;
 
+const char *F_SET[6] = {"Accepted", "Wrong Answer", "Runtime Error", "Time Limited Error", "Presentation Error", "Compile Error"};
+
 typedef struct problem_runtime {
         char *pathname;
         char *filename;
@@ -444,10 +446,13 @@ void update_solution(const char *oid, const int jdg_ret, const int mem_peak, con
         printf("start\n");
         try {
                 mongo::DBClientConnection c;
-                mongo::BSONObj cur_obj;
+
+                char c_mem_peak[64], c_time_used[64];
+                sprintf(c_mem_peak, "%d", mem_peak);
+                sprintf(c_time_used, "%d", time_used);
 
                 c.connect(DB_HOST);
-                c.update("unsys.runtimestatus", BSON("_index" << oid), BSON("$set" << BSON( "status"<< "A"<< "memory"<< "220"<< "time"<< "330")));
+                c.update("unsys.runtimestatus", BSON("_index" << oid), BSON("$set" << BSON( "status"<< F_SET[jdg_ret]<< "memory"<< c_mem_peak<< "time"<< c_time_used)));
                 printf("done\n");
         } catch(const mongo::DBException &e) {
                 printf("connection err\n");
