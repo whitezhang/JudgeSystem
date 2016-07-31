@@ -21,9 +21,12 @@
 #include <fstream>
 
 #include "mongo/client/dbclient.h"
+#include "mongo/client/dbclientinterface.h"
 #include <sys/stat.h>
 
 using namespace std;
+
+const int BATCH_SIZE = 128;
 
 const int LANGC = 1;
 const int LANGCPP = 2;
@@ -39,7 +42,6 @@ const int GLOBAL_ID = 1536;
 const char *RM_PATH = "/home/workspace/runtime";
 const char *DB_HOST = "172.17.0.4";
 const char *DATA_PATH = "/home/workspace/data";
-const int  JUDGE_THREAD = 128;
 
 const int F_AC = 0;
 const int F_WA = 1;
@@ -384,7 +386,7 @@ void mkdir_if_not_exist(char *pathname) {
     mkdir(pathname, 0777);
 }
 
-void mv_code2runtime(problem_runtime *pr_list[JUDGE_THREAD]) {
+void mv_code2runtime(problem_runtime *pr_list[BATCH_SIZE]) {
         int index = 0;
     mongo::DBClientConnection c;
     mongo::BSONObj cur_obj;
@@ -427,11 +429,16 @@ void mv_code2runtime(problem_runtime *pr_list[JUDGE_THREAD]) {
         fout.close();
 
                 strcpy(pr_list[index]->filename, pathname);
+
+                c.remove("unsys.submitqueue", cur_obj);
                 index++;
+                if(index > BATCH_SIZE) {
+                        break;
+                }
     }
 }
 
-int process_smtqueue(problem_runtime *pr_list[JUDGE_THREAD]) {
+int process_smtqueue(problem_runtime *pr_list[BATCH_SIZE]) {
     mongo::client::initialize();
     try {
         mv_code2runtime(pr_list);
@@ -492,16 +499,16 @@ int process_single_submit(problem_runtime *pr_list) {
         }
 }
 
-void process_all_submits(problem_runtime *pr_list[JUDGE_THREAD]) {
-        for(int i = 0; i < JUDGE_THREAD; i++) {
+void process_all_submits(problem_runtime *pr_list[BATCH_SIZE]) {
+        for(int i = 0; i < BATCH_SIZE; i++) {
                 if(pr_list[i]->pathname[0] == '\0') continue;
                 int retval = process_single_submit(pr_list[i]);
                 printf("Judge Result: %d\n", retval);
         }
 }
 
-void init_runtime(problem_runtime *pr_list[JUDGE_THREAD]) {
-        for(int i = 0; i < JUDGE_THREAD; i++) {
+void init_runtime(problem_runtime *pr_list[BATCH_SIZE]) {
+        for(int i = 0; i < BATCH_SIZE; i++) {
                 pr_list[i] = (problem_runtime*)malloc(sizeof(problem_runtime));
                 pr_list[i]->pathname = (char*)malloc(sizeof(char) * 128);
                 pr_list[i]->filename = (char*)malloc(sizeof(char) * 128);
@@ -512,7 +519,7 @@ void init_runtime(problem_runtime *pr_list[JUDGE_THREAD]) {
 }
 
 int main() {
-        problem_runtime *pr_list[JUDGE_THREAD];
+        problem_runtime *pr_list[BATCH_SIZE];
         init_runtime(pr_list);
         process_smtqueue(pr_list);
         process_all_submits(pr_list);
