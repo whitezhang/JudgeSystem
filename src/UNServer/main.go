@@ -11,6 +11,7 @@ import (
 
 func main() {
 	ctx.InitServerContext()
+	initSessionManager()
 
 	runtime.GOMAXPROCS(12)
 	port := ":8090"

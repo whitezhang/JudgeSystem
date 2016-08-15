@@ -1,4 +1,22 @@
 var app = angular.module('myApp', []);
+
+app.controller('formCtrl',
+    function($scope, $http) {
+        $scope.signin = function() {
+            $http.get("http://localhost:8090/slogin", {
+                params: {
+                    username: $scope.username,
+                    password: $scope.password
+                }
+            }).success(function(response) {
+                if (response.Status == "OK") {
+                    alert("Yes"); // TODO
+                }
+            });
+        };
+        $scope.signin();
+    });
+
 app.controller('customersCtrl',
     function($scope, $http) {
         var pathname = window.location.pathname.substring(1);

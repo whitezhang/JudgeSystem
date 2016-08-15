@@ -6,6 +6,7 @@ import (
 	"daomanage"
 	"encoding/json"
 	"fmt"
+	"github.com/astaxie/beego/session"
 	"log"
 	"net/http"
 	"net/url"
@@ -15,17 +16,56 @@ import (
 
 const (
 	InfoLoginFailed = "Incorrect username or password"
-	InfoLoginSucc   = "Let's GO"
+	InfoLoginSucc   = "Let's GO! "
 
 	InfoHack = "What the fk r u looking for?"
 
 	PlbPerPage = 50
 )
 
+var globalSessions *session.Manager
+
 type ErrorInfo struct {
 	Status string
 	Info   string
 }
+
+func initSessionManager() {
+	globalSessions, _ = session.NewManager("memory", `{"cookieName":"gosessionid","gclifetime":3600}`)
+	go globalSessions.GC()
+}
+
+func sessionIsLogin(w http.ResponseWriter, r *http.Request) bool {
+	sess, _ := globalSessions.SessionStart(w, r)
+	defer sess.SessionRelease(w)
+	sessionindex := sess.Get("sessionindex")
+	if sessionindex != nil {
+		return true
+	}
+	return false
+}
+
+func sessionSet(w http.ResponseWriter, r *http.Request) {
+	sess, _ := globalSessions.SessionStart(w, r)
+	defer sess.SessionRelease(w)
+	sess.Set("sessionindex", r.FormValue("sessionindex"))
+}
+
+// func loginCheck(w http.ResponseWriter, r *http.Request) {
+// 	sess, _ := globalSessions.SessionStart(w, r)
+// 	defer sess.SessionRelease(w)
+// 	username := sess.Get("username")
+// 	fmt.Println(username, sess)
+// 	if r.Method == "GET" {
+// 		fmt.Println("get")
+// 		// t, _ := template.ParseFiles("login.gtpl")
+// 		// t.Execute(w, nil)
+// 	} else {
+// 		fmt.Println("username:", r.Form["username"])
+// 		sess.Set("username", r.Form["username"])
+// 		fmt.Println("password:", r.Form["password"])
+// 	}
+// }
 
 func isAuthorized(query url.Values) bool {
 	var ipaddr string
@@ -57,6 +97,15 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		userInfo  daomanage.User
 		errorInfo ErrorInfo
 	)
+
+	if sessionIsLogin(w, r) == true {
+		errorInfo.Status = "OK"
+		errorInfo.Info = InfoLoginSucc + userInfo.Username
+		data, _ := json.Marshal(errorInfo)
+		fmt.Fprintf(w, string(data))
+		return
+	}
+
 	query, err = url.ParseQuery(r.URL.RawQuery)
 	if err != nil {
 		log.Println("Parse Error", err)
@@ -68,8 +117,9 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		userInfo, err = daomanage.GetUserInfo("username", s[0])
 		if p, ok := query["password"]; ok {
 			if p[0] == userInfo.Password {
+				sessionSet(w, r)
 				errorInfo.Status = "OK"
-				errorInfo.Info = InfoLoginSucc
+				errorInfo.Info = InfoLoginSucc + userInfo.Username
 				data, _ := json.Marshal(errorInfo)
 				fmt.Fprintf(w, string(data))
 				return
