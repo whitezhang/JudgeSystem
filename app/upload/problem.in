@@ -1,0 +1,9 @@
+[problem]
+title=xxx
+description=xxx
+time=1
+memory=100
+input=in
+output=out
+simpleinput=sinput
+simpleoutput=soutput
