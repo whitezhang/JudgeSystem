@@ -71,11 +71,11 @@ int execute_cmd(const char *fmt, ...) {
     return ret;
 }
 
-void run_solution(int runid, int clientid) {
+void run_solution(int runid, int clientid, const char* data_in) {
     nice(19);
-    //freopen("data.in", "r", stdin);
+    freopen(data_in, "r", stdin);
     freopen("user.out", "w", stdout);
-    freopen("error.out", "a+", stderr);
+    freopen("err.out", "w", stderr);
 
     char buf[BUFFER_SIZE], runidstr[BUFFER_SIZE];
     struct rlimit LIM;
@@ -353,7 +353,7 @@ int compare_solution(const char* file1, const char* file2) {
             }
         }
     }
-end:
+    end:
     // TODO
     if(f1) fclose(f1);
     if(f2) fclose(f2);
@@ -361,7 +361,7 @@ end:
 }
 
 int judge_solution(int pid) {
-        char std_out_pathname[128];
+    char std_out_pathname[128];
     sprintf(std_out_pathname, "%s/%d/std.out", DATA_PATH, pid);
     int cmp_ret = compare_solution(std_out_pathname, "user.out");
     return cmp_ret;
@@ -387,11 +387,11 @@ void mkdir_if_not_exist(char *pathname) {
 }
 
 void mv_code2runtime(problem_runtime *pr_list[BATCH_SIZE]) {
-        int index = 0;
+    int index = 0;
     mongo::DBClientConnection c;
     mongo::BSONObj cur_obj;
-        mongo::BSONElement cur_ele;
-        mongo::OID objectID;
+    mongo::BSONElement cur_ele;
+    mongo::OID objectID;
     c.connect(DB_HOST);
     auto_ptr<mongo::DBClientCursor> cursor = c.query("unsys.submitqueue", mongo::BSONObj());
     while(cursor->more()) {
@@ -404,19 +404,19 @@ void mv_code2runtime(problem_runtime *pr_list[BATCH_SIZE]) {
         const char *code, *lang, *oid;
 
         cur_obj = cursor->next();
-                cur_obj.getObjectID(cur_ele);
-                objectID = cur_ele.__oid();
+        cur_obj.getObjectID(cur_ele);
+        objectID = cur_ele.__oid();
 
-                oid = objectID.toString().c_str();
+        oid = objectID.toString().c_str();
         pid = cur_obj.getIntField("pid");
         code= cur_obj.getStringField("code");
         lang = cur_obj.getStringField("lang");
 
         mkdir_if_not_exist(pathname);
-                strcpy(pr_list[index]->pathname, pathname);
-                strcpy(pr_list[index]->lang, lang);
-                strcpy(pr_list[index]->oid, oid);
-                pr_list[index]->pid = pid;
+        strcpy(pr_list[index]->pathname, pathname);
+        strcpy(pr_list[index]->lang, lang);
+        strcpy(pr_list[index]->oid, oid);
+        pr_list[index]->pid = pid;
         if(!strcmp(lang, "C")) {
             strcat(pathname, "Main.c");
         }
@@ -428,13 +428,13 @@ void mv_code2runtime(problem_runtime *pr_list[BATCH_SIZE]) {
         fout << flush;
         fout.close();
 
-                strcpy(pr_list[index]->filename, pathname);
+        strcpy(pr_list[index]->filename, pathname);
 
-                c.remove("unsys.submitqueue", cur_obj);
-                index++;
-                if(index > BATCH_SIZE) {
-                        break;
-                }
+        //c.remove("unsys.submitqueue", cur_obj);
+        index++;
+        if(index > BATCH_SIZE) {
+            break;
+        }
     }
 }
 
@@ -462,7 +462,7 @@ void update_solution(const char *oid, const int jdg_ret, const int mem_peak, con
         c.update("unsys.runtimestatus", BSON("_index" << oid), BSON("$set" << BSON( "status"<< F_SET[jdg_ret]<< "memory"<< c_mem_peak<< "time"<< c_time_used)));
         printf("done\n");
     } catch(const mongo::DBException &e) {
-            printf("connection err\n");
+        printf("connection err\n");
     }
 }
 
@@ -475,35 +475,37 @@ int process_single_submit(problem_runtime *pr_list) {
     int i = 0;
 
     if(DEBUG) {
-            printf("chdir to %s\n", pr_list->pathname);
+        printf("chdir to %s\n", pr_list->pathname);
     }
     chdir(pr_list->pathname);
     if(SUCCESS != compile(lang)) {
-            return F_CE;
+        return F_CE;
     }
     pid_t pidApp = fork();
     if(pidApp == 0) {
-            run_solution(1, 1);
+        char data_in[128];
+        sprintf(data_in, "%s/%d/data.in", DATA_PATH, pr_list->pid);
+        run_solution(1, 1, data_in);
     }
     else {
-            int mem_peak, time_used;
-            int jdg_ret;
-            mem_peak = time_used = 0;
-            watch_runtime(pidApp, LANGC, topmemory, mem_lmt, time_lmt, &mem_peak, &time_used);
-            jdg_ret = judge_solution(pr_list->pid);
-            if(DEBUG) {
-                    printf("Judge Result in Progress: %d\n", jdg_ret);
-            }
-            update_solution(pr_list->oid, jdg_ret, mem_peak, time_used);
-            return jdg_ret;
+        int mem_peak, time_used;
+        int jdg_ret;
+        mem_peak = time_used = 0;
+        watch_runtime(pidApp, LANGC, topmemory, mem_lmt, time_lmt, &mem_peak, &time_used);
+        jdg_ret = judge_solution(pr_list->pid);
+        if(DEBUG) {
+            printf("Judge Result in Progress: %d\n", jdg_ret);
+        }
+        update_solution(pr_list->oid, jdg_ret, mem_peak, time_used);
+        return jdg_ret;
     }
 }
 
 void process_all_submits(problem_runtime *pr_list[BATCH_SIZE]) {
     for(int i = 0; i < BATCH_SIZE; i++) {
-            if(pr_list[i]->pathname[0] == '\0') continue;
-            int retval = process_single_submit(pr_list[i]);
-            printf("Judge Result: %d\n", retval);
+        if(pr_list[i]->pathname[0] == '\0') continue;
+        int retval = process_single_submit(pr_list[i]);
+        printf("Judge Result: %d\n", retval);
     }
 }
 
