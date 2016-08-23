@@ -39,9 +39,9 @@ const int SUCCESS = 0;
 const int ERROR = 1;
 
 const int GLOBAL_ID = 1536;
-const char *RM_PATH = "/home/workspace/runtime";
-const char *DB_HOST = "172.17.0.4";
-const char *DATA_PATH = "/home/workspace/data";
+const char *RM_PATH = "/home/judger/worksystem/runtime";
+const char *DB_HOST = "127.0.0.1";
+const char *DATA_PATH = "/home/judger/worksystem/data";
 
 const int F_AC = 0;
 const int F_WA = 1;
@@ -53,11 +53,11 @@ const int F_CE = 5;
 const char *F_SET[6] = {"Accepted", "Wrong Answer", "Runtime Error", "Time Limited Error", "Presentation Error", "Compile Error"};
 
 typedef struct problem_runtime {
-        char *pathname;
-        char *filename;
-        char *lang;
-        char *oid;
-        int pid;
+    char *pathname;
+    char *filename;
+    char *lang;
+    char *oid;
+    int pid;
 }problem_runtime;
 
 int execute_cmd(const char *fmt, ...) {
@@ -449,21 +449,21 @@ int process_smtqueue(problem_runtime *pr_list[BATCH_SIZE]) {
 }
 
 void update_solution(const char *oid, const int jdg_ret, const int mem_peak, const int time_used) {
-        mongo::client::initialize();
-        printf("start\n");
-        try {
-                mongo::DBClientConnection c;
+    mongo::client::initialize();
+    printf("start\n");
+    try {
+        mongo::DBClientConnection c;
 
-                char c_mem_peak[64], c_time_used[64];
-                sprintf(c_mem_peak, "%d", mem_peak);
-                sprintf(c_time_used, "%d", time_used);
+        char c_mem_peak[64], c_time_used[64];
+        sprintf(c_mem_peak, "%d", mem_peak);
+        sprintf(c_time_used, "%d", time_used);
 
-                c.connect(DB_HOST);
-                c.update("unsys.runtimestatus", BSON("_index" << oid), BSON("$set" << BSON( "status"<< F_SET[jdg_ret]<< "memory"<< c_mem_peak<< "time"<< c_time_used)));
-                printf("done\n");
-        } catch(const mongo::DBException &e) {
-                printf("connection err\n");
-        }
+        c.connect(DB_HOST);
+        c.update("unsys.runtimestatus", BSON("_index" << oid), BSON("$set" << BSON( "status"<< F_SET[jdg_ret]<< "memory"<< c_mem_peak<< "time"<< c_time_used)));
+        printf("done\n");
+    } catch(const mongo::DBException &e) {
+            printf("connection err\n");
+    }
 }
 
 int process_single_submit(problem_runtime *pr_list) {
@@ -472,55 +472,55 @@ int process_single_submit(problem_runtime *pr_list) {
     int topmemory = 0;
 
     int lang = LANGC;
-        int i = 0;
+    int i = 0;
 
-        if(DEBUG) {
-                printf("chdir to %s\n", pr_list->pathname);
-        }
-        chdir(pr_list->pathname);
-        if(SUCCESS != compile(lang)) {
-                return F_CE;
-        }
-        pid_t pidApp = fork();
-        if(pidApp == 0) {
-                run_solution(1, 1);
-        }
-        else {
-                int mem_peak, time_used;
-                int jdg_ret;
-                mem_peak = time_used = 0;
-                watch_runtime(pidApp, LANGC, topmemory, mem_lmt, time_lmt, &mem_peak, &time_used);
-                jdg_ret = judge_solution(pr_list->pid);
-                if(DEBUG) {
-                        printf("Judge Result in Progress: %d\n", jdg_ret);
-                }
-                update_solution(pr_list->oid, jdg_ret, mem_peak, time_used);
-                return jdg_ret;
-        }
+    if(DEBUG) {
+            printf("chdir to %s\n", pr_list->pathname);
+    }
+    chdir(pr_list->pathname);
+    if(SUCCESS != compile(lang)) {
+            return F_CE;
+    }
+    pid_t pidApp = fork();
+    if(pidApp == 0) {
+            run_solution(1, 1);
+    }
+    else {
+            int mem_peak, time_used;
+            int jdg_ret;
+            mem_peak = time_used = 0;
+            watch_runtime(pidApp, LANGC, topmemory, mem_lmt, time_lmt, &mem_peak, &time_used);
+            jdg_ret = judge_solution(pr_list->pid);
+            if(DEBUG) {
+                    printf("Judge Result in Progress: %d\n", jdg_ret);
+            }
+            update_solution(pr_list->oid, jdg_ret, mem_peak, time_used);
+            return jdg_ret;
+    }
 }
 
 void process_all_submits(problem_runtime *pr_list[BATCH_SIZE]) {
-        for(int i = 0; i < BATCH_SIZE; i++) {
-                if(pr_list[i]->pathname[0] == '\0') continue;
-                int retval = process_single_submit(pr_list[i]);
-                printf("Judge Result: %d\n", retval);
-        }
+    for(int i = 0; i < BATCH_SIZE; i++) {
+            if(pr_list[i]->pathname[0] == '\0') continue;
+            int retval = process_single_submit(pr_list[i]);
+            printf("Judge Result: %d\n", retval);
+    }
 }
 
 void init_runtime(problem_runtime *pr_list[BATCH_SIZE]) {
-        for(int i = 0; i < BATCH_SIZE; i++) {
-                pr_list[i] = (problem_runtime*)malloc(sizeof(problem_runtime));
-                pr_list[i]->pathname = (char*)malloc(sizeof(char) * 128);
-                pr_list[i]->filename = (char*)malloc(sizeof(char) * 128);
-                pr_list[i]->lang = (char*)malloc(sizeof(char) * 64);
-                pr_list[i]->oid = (char*)malloc(sizeof(char) * 64);
-                pr_list[i]->pid = -1;
-        }
+    for(int i = 0; i < BATCH_SIZE; i++) {
+        pr_list[i] = (problem_runtime*)malloc(sizeof(problem_runtime));
+        pr_list[i]->pathname = (char*)malloc(sizeof(char) * 128);
+        pr_list[i]->filename = (char*)malloc(sizeof(char) * 128);
+        pr_list[i]->lang = (char*)malloc(sizeof(char) * 64);
+        pr_list[i]->oid = (char*)malloc(sizeof(char) * 64);
+        pr_list[i]->pid = -1;
+    }
 }
 
 int main() {
-        problem_runtime *pr_list[BATCH_SIZE];
-        init_runtime(pr_list);
-        process_smtqueue(pr_list);
-        process_all_submits(pr_list);
+    problem_runtime *pr_list[BATCH_SIZE];
+    init_runtime(pr_list);
+    process_smtqueue(pr_list);
+    process_all_submits(pr_list);
 }
