@@ -235,8 +235,8 @@ int watch_runtime(pid_t pidApp, int lang, int topmemory, int mem_lmt, int time_l
             }
         }
         if(tempmemory > *mem_peak) {
-                        *mem_peak = tempmemory;
-                }
+            *mem_peak = tempmemory;
+        }
 
         if(tempmemory > topmemory) {
             topmemory = tempmemory;
