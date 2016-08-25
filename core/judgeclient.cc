@@ -266,7 +266,7 @@ int watch_runtime(pid_t pidApp, int lang, int topmemory, int mem_lmt, int time_l
         }
         usedtime += (ruse.ru_utime.tv_sec * 1000 + ruse.ru_utime.tv_usec / 1000);
         usedtime += (ruse.ru_stime.tv_sec * 1000 + ruse.ru_stime.tv_usec / 1000);
-                *time_used = usedtime;
+        *time_used = usedtime;
         if(usedtime >= time_lmt) {
             ptrace(PTRACE_KILL, pidApp, NULL, NULL);
             break;
