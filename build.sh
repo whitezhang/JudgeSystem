@@ -1,5 +1,13 @@
-ROOTDIR=`pwd`
+#!/bin/bash
 
+ROOTDIR=`dirname $0 | sed -e "s#^\\([^/]\\)#${PWD}/\\1#"`
+GOLANG_VERSION=1.6.1
+
+rm -rf ${ROOTDIR}/go 2>/dev/null
+cat go_${GOLANG_VERSION}/go.tar.gz.* | tar xz
+cat ${ROOTDIR}/go.tar.gz  | tar zxvf -
+
+export GOROOT=${ROOTDIR}/go
 export GOPATH=$ROOTDIR
 
 #rm -rf ${ROOTDIR}/output &&
