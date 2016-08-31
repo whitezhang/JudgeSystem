@@ -15,10 +15,11 @@ import (
 )
 
 const (
-	InfoLoginFailed = "Incorrect username or password"
-	InfoLoginSucc   = "Let's GO! "
+	InfoLoginFailed    = "Incorrect username or password"
+	InfoLoginSucc      = "Let's GO! "
+	InfoRegisterFailed = "The username has been used"
 
-	InfoHack = "What the fk r u looking for?"
+	InfoHack = "So..so?"
 
 	PlbPerPage = 50
 )
@@ -88,6 +89,26 @@ func isAuthorized(query url.Values) bool {
 		return false
 	}
 	return true
+}
+
+func registHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		query url.Values
+		err   error
+	)
+	query, err = url.ParseQuery(r.URL.RawQuery)
+	if err != nil {
+		log.Println("Parse Error: Register", err)
+		return
+	}
+	username, _ := query["username"]
+	password, _ := query["password"]
+	nickname, _ := query["nickname"]
+	ischallenger, _ := query["ischallenger"]
+	if InsertRegister(username, password, nickname, ischallenger) != nil {
+		fmt.Fprintf(w, InfoRegisterFailed)
+		return
+	}
 }
 
 func loginHandler(w http.ResponseWriter, r *http.Request) {

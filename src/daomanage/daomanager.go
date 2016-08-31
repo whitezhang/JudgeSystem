@@ -46,6 +46,10 @@ func (man *Manager) initConf(cfgFile string) (err error) {
 	return
 }
 
+func InsertRegister(username, password, nickname, ischallenger string) (err error) {
+
+}
+
 func InsertSubmitQueue(pid int64, code string, lang string) (err error) {
 	var exSbtQue []ExSubmitQueue
 	session, err := mgo.Dial(hostName)
