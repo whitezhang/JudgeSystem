@@ -93,22 +93,32 @@ func isAuthorized(query url.Values) bool {
 
 func registHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		query url.Values
-		err   error
+		query     url.Values
+		err       error
+		errorInfo ErrorInfo
 	)
 	query, err = url.ParseQuery(r.URL.RawQuery)
 	if err != nil {
 		log.Println("Parse Error: Register", err)
 		return
 	}
+	uid, _ := query["uid"]
 	username, _ := query["username"]
 	password, _ := query["password"]
 	nickname, _ := query["nickname"]
 	ischallenger, _ := query["ischallenger"]
-	if InsertRegister(username, password, nickname, ischallenger) != nil {
+	if daomanage.InsertRegister(uid[0], username[0], password[0], nickname[0], ischallenger[0]) != nil {
+		errorInfo.Status = "400"
+		errorInfo.Info = InfoRegisterFailed
+		data, _ := json.Marshal(errorInfo)
 		fmt.Fprintf(w, InfoRegisterFailed)
 		return
 	}
+	errorInfo.Status = "200"
+	errorInfo.Info = InfoLoginSucc
+	data, _ := json.Marshal(errorInfo)
+	fmt.Fprintf(w, string(data))
+	return
 }
 
 func loginHandler(w http.ResponseWriter, r *http.Request) {
@@ -120,7 +130,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if sessionIsLogin(w, r) == true {
-		errorInfo.Status = "OK"
+		errorInfo.Status = "200"
 		errorInfo.Info = InfoLoginSucc + userInfo.Username
 		data, _ := json.Marshal(errorInfo)
 		fmt.Fprintf(w, string(data))
@@ -139,14 +149,14 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		if p, ok := query["password"]; ok {
 			if p[0] == userInfo.Password {
 				sessionSet(w, r)
-				errorInfo.Status = "OK"
+				errorInfo.Status = "200"
 				errorInfo.Info = InfoLoginSucc + userInfo.Username
 				data, _ := json.Marshal(errorInfo)
 				fmt.Fprintf(w, string(data))
 				return
 			}
 		}
-		errorInfo.Status = "Error"
+		errorInfo.Status = "400"
 		errorInfo.Info = InfoLoginFailed
 		data, _ := json.Marshal(errorInfo)
 		fmt.Fprintf(w, string(data))

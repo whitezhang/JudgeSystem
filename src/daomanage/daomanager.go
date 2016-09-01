@@ -46,8 +46,33 @@ func (man *Manager) initConf(cfgFile string) (err error) {
 	return
 }
 
-func InsertRegister(username, password, nickname, ischallenger string) (err error) {
-
+func InsertRegister(uid, username, password, nickname, challenger string) (err error) {
+	var userinfo User
+	var ischallenger bool
+	session, err := mgo.Dial(hostName)
+	if err != nil {
+		log.Println("Connect MongoDB failed")
+		return err
+	}
+	defer session.Close()
+	session.SetMode(mgo.Monotonic, true)
+	collection := session.DB(dbName).C("user")
+	err = collection.Find(bson.M{"username": username}).One(&userinfo)
+	if err != nil {
+		log.Printf("The username %s has been registered", username)
+		return err
+	}
+	if challenger == "1" {
+		ischallenger = true
+	} else {
+		ischallenger = false
+	}
+	err = collection.Insert(&User{uid, username, password, nickname, ischallenger, 0.0, "traveller"})
+	if err != nil {
+		log.Printf("Error: Failed in register")
+		return err
+	}
+	return nil
 }
 
 func InsertSubmitQueue(pid int64, code string, lang string) (err error) {

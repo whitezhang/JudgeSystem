@@ -19,7 +19,7 @@ type Problem struct {
 }
 
 type User struct {
-	UID          int64   `bson:"uid" json:"uid"`
+	UID          string  `bson:"uid" json:"uid"`
 	Username     string  `bson:"username" json:"username"`
 	Password     string  `bson:"password" json:"password"`
 	Nickname     string  `bson:"nickname" json:"nickname"`
