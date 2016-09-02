@@ -18,5 +18,6 @@ go build ./src/UNServer &&
 
 mkdir -p ${ROOTDIR}/output/{conf,bin,log,data,sh} &&
 
+cp ./sh/* ${ROOTDIR}/output/sh &&
 cp ./src/UNServer/conf/* output/conf/ &&
 cp UNServer output/bin || exit 1
