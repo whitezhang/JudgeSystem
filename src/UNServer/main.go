@@ -2,6 +2,7 @@ package main
 
 import (
 	ctx "context"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -13,8 +14,8 @@ func main() {
 	ctx.InitServerContext()
 	initSessionManager()
 
-	runtime.GOMAXPROCS(12)
-	port := ":8090"
+	runtime.GOMAXPROCS(ctx.SvrCtx.SvrCfg.Server.NumCPU)
+	port := fmt.Sprintf(":%d", ctx.SvrCtx.SvrCfg.Server.Port)
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
 		log.Println("Init Listen error: ", err)

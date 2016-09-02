@@ -1,8 +1,8 @@
 package main
 
 import (
-	l4g "classified-lib/golang-lib/log"
-	ctx "context"
+	//l4g "classified-lib/golang-lib/log"
+	//ctx "context"
 	"daomanage"
 	"encoding/json"
 	"fmt"
@@ -10,7 +10,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"service/auth"
+	//"service/auth"
 	"strconv"
 )
 
@@ -68,6 +68,7 @@ func sessionSet(w http.ResponseWriter, r *http.Request) {
 // 	}
 // }
 
+/*
 func isAuthorized(query url.Values) bool {
 	var ipaddr string
 
@@ -90,6 +91,7 @@ func isAuthorized(query url.Values) bool {
 	}
 	return true
 }
+*/
 
 func registHandler(w http.ResponseWriter, r *http.Request) {
 	var (
@@ -111,7 +113,7 @@ func registHandler(w http.ResponseWriter, r *http.Request) {
 		errorInfo.Status = "400"
 		errorInfo.Info = InfoRegisterFailed
 		data, _ := json.Marshal(errorInfo)
-		fmt.Fprintf(w, InfoRegisterFailed)
+		fmt.Fprintf(w, string(data))
 		return
 	}
 	errorInfo.Status = "200"
