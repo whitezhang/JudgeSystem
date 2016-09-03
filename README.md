@@ -53,39 +53,4 @@ IP:PORT/scontestinfo?cid=xxx
 ```
 IP:PORT/ssubmit?pid=xxx&code=xxx&lang=xxx
 ```
-- Return 200 if succeed else 400### RESTfulAPI(JSON)
-#### Signin
-```
-IP:PORT/slogin?username=xxx&password=xxx
-```
-- Return 200 if succeed else 400
-
-#### Get the user
-```
-IP:PORT/suser?uid=xxx
-```
-- Return 200 if succeed else 400
-
-#### Get the problem
-```
-IP:PORT/sprobleminfo?pid=xxx
-```
-- Return 200 if succeed else 400
-
-#### Get the contests
-```
-IP:PORT/scontests?page=xxx
-```
-- Return 200 if succeed else 400
-
-#### Get the contest
-```
-IP:PORT/scontestinfo?cid=xxx
-```
-- Return 200 if succeed else 400
-
-#### Submit the answer
-```
-IP:PORT/ssubmit?pid=xxx&code=xxx&lang=xxx
-```
 - Return 200 if succeed else 400
