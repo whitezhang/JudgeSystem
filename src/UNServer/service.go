@@ -22,6 +22,7 @@ const (
 	InfoHack = "So..so?"
 
 	PlbPerPage = 50
+	CstPerPage = 20
 )
 
 var globalSessions *session.Manager
@@ -231,18 +232,33 @@ func problemsHandler(w http.ResponseWriter, r *http.Request) {
 
 func contestsHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		// query       url.Values
+		query       url.Values
 		err         error
-		contestInfo daomanage.Contest
+		contestInfo []daomanage.Contest
 	)
-	// query, err = url.ParseQuery(r.URL.RawQuery)
+	query, err = url.ParseQuery(r.URL.RawQuery)
 	if err != nil {
 		log.Println("Parse Error", err)
 		return
 	}
 
+	var page int64
+	if s, ok := query["page"]; ok {
+		if s[0] == "" {
+			page = 1
+		} else {
+			page, err = strconv.ParseInt(s[0], 10, 64)
+			if err != nil {
+				log.Println("re")
+				return
+			}
+		}
+	}
+
 	// Get contests info
-	contestInfo, err = daomanage.GetContest(1)
+	startIndex := CstPerPage * (page - 1)
+	endIndex := startIndex + CstPerPage
+	contestInfo, err = daomanage.GetContestInRange(startIndex, endIndex)
 	if err == nil {
 		data, _ := json.Marshal(contestInfo)
 		fmt.Fprintf(w, string(data))

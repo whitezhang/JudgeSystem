@@ -23,16 +23,18 @@ func main() {
 	}
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
-	http.HandleFunc("/index", indexPageHandler)
-	http.HandleFunc("/contests", contestPageHandler)
-	http.HandleFunc("/problems", problemPageHandler)
-	http.HandleFunc("/status", statusPageHandler)
-	http.HandleFunc("/ratings", ratingPageHandler)
-	http.HandleFunc("/about", aboutPageHandler)
-	http.HandleFunc("/submit", submitPageHandler)
-
-	http.HandleFunc("/problem", singleProblemHandler)
-	http.HandleFunc("/contestinfo", singleContestHandler)
+	http.HandleFunc("/", indexPageHandler)
+	/*
+		http.HandleFunc("/index", indexPageHandler)
+		http.HandleFunc("/contests", contestPageHandler)
+		http.HandleFunc("/problems", problemPageHandler)
+		http.HandleFunc("/status", statusPageHandler)
+		http.HandleFunc("/ratings", ratingPageHandler)
+		http.HandleFunc("/about", aboutPageHandler)
+		http.HandleFunc("/submit", submitPageHandler)
+		http.HandleFunc("/problem", singleProblemHandler)
+		http.HandleFunc("/contestinfo", singleContestHandler)
+	*/
 
 	http.HandleFunc("/slogin", loginHandler)
 	http.HandleFunc("/suser", userHandler)

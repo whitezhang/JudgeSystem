@@ -108,23 +108,23 @@ func InsertSubmitQueue(pid int64, code string, lang string) (err error) {
 	return nil
 }
 
-func GetContest(cid int64) (contestInfo Contest, err error) {
+func GetContestInRange(startIndex, endIndex int64) (contestInfo []Contest, err error) {
 	session, err := mgo.Dial(hostName)
 	if err != nil {
 		log.Println("Connect MongoDB failed")
-		return Contest{}, err
+		return []Contest{}, err
 	}
 	defer session.Close()
 
 	session.SetMode(mgo.Monotonic, true)
 	collection := session.DB(dbName).C("contest")
 
-	err = collection.Find(bson.M{"cid": cid}).One(&contestInfo)
+	err = collection.Find(bson.M{"cid": bson.M{"$gte": startIndex, "$lte": endIndex}}).All(&contestInfo)
 	if err != nil {
-		log.Printf("No Contest named: %s\n", cid)
-		return Contest{}, err
+		log.Printf("No Contest indexing: from: %d to %d\n", startIndex, endIndex)
+		return []Contest{}, err
 	}
-	return contestInfo, nil
+	return
 }
 
 func GetContestProblems(cid int64) (contestInfo []ContestProblem, err error) {
