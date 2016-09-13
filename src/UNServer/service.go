@@ -27,7 +27,7 @@ const (
 
 var globalSessions *session.Manager
 
-type ErrorInfo struct {
+type StatusInfo struct {
 	Status string
 	Info   string
 }
@@ -96,9 +96,9 @@ func isAuthorized(query url.Values) bool {
 
 func registHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		query     url.Values
-		err       error
-		errorInfo ErrorInfo
+		query      url.Values
+		err        error
+		statusInfo StatusInfo
 	)
 	query, err = url.ParseQuery(r.URL.RawQuery)
 	if err != nil {
@@ -109,33 +109,34 @@ func registHandler(w http.ResponseWriter, r *http.Request) {
 	username, _ := query["username"]
 	password, _ := query["password"]
 	nickname, _ := query["nickname"]
+	email, _ := query["email"]
 	ischallenger, _ := query["ischallenger"]
-	if daomanage.InsertRegister(uid[0], username[0], password[0], nickname[0], ischallenger[0]) != nil {
-		errorInfo.Status = "400"
-		errorInfo.Info = InfoRegisterFailed
-		data, _ := json.Marshal(errorInfo)
+	if daomanage.InsertRegister(uid[0], username[0], password[0], nickname[0], email[0], ischallenger[0]) != nil {
+		statusInfo.Status = "400"
+		statusInfo.Info = InfoRegisterFailed
+		data, _ := json.Marshal(statusInfo)
 		fmt.Fprintf(w, string(data))
 		return
 	}
-	errorInfo.Status = "200"
-	errorInfo.Info = InfoLoginSucc
-	data, _ := json.Marshal(errorInfo)
+	statusInfo.Status = "200"
+	statusInfo.Info = InfoLoginSucc
+	data, _ := json.Marshal(statusInfo)
 	fmt.Fprintf(w, string(data))
 	return
 }
 
 func loginHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		query     url.Values
-		err       error
-		userInfo  daomanage.User
-		errorInfo ErrorInfo
+		query      url.Values
+		err        error
+		userInfo   daomanage.User
+		statusInfo StatusInfo
 	)
 
 	if sessionIsLogin(w, r) == true {
-		errorInfo.Status = "200"
-		errorInfo.Info = InfoLoginSucc + userInfo.Username
-		data, _ := json.Marshal(errorInfo)
+		statusInfo.Status = "200"
+		statusInfo.Info = InfoLoginSucc + userInfo.Username
+		data, _ := json.Marshal(statusInfo)
 		fmt.Fprintf(w, string(data))
 		return
 	}
@@ -152,16 +153,16 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		if p, ok := query["password"]; ok {
 			if p[0] == userInfo.Password {
 				sessionSet(w, r)
-				errorInfo.Status = "200"
-				errorInfo.Info = InfoLoginSucc + userInfo.Username
-				data, _ := json.Marshal(errorInfo)
+				statusInfo.Status = "200"
+				statusInfo.Info = InfoLoginSucc + userInfo.Username
+				data, _ := json.Marshal(statusInfo)
 				fmt.Fprintf(w, string(data))
 				return
 			}
 		}
-		errorInfo.Status = "400"
-		errorInfo.Info = InfoLoginFailed
-		data, _ := json.Marshal(errorInfo)
+		statusInfo.Status = "400"
+		statusInfo.Info = InfoLoginFailed
+		data, _ := json.Marshal(statusInfo)
 		fmt.Fprintf(w, string(data))
 		return
 	}
@@ -234,7 +235,7 @@ func contestsHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		query       url.Values
 		err         error
-		contestInfo []daomanage.Contest
+		contestInfo daomanage.ContestInfoSet
 	)
 	query, err = url.ParseQuery(r.URL.RawQuery)
 	if err != nil {
@@ -316,6 +317,8 @@ func contestInfoHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func submitHandler(w http.ResponseWriter, r *http.Request) {
+	var statusInfo StatusInfo
+
 	r.ParseForm()
 	pid := r.PostFormValue("pid")
 	code := r.PostFormValue("code")
@@ -327,6 +330,12 @@ func submitHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	daomanage.InsertSubmitQueue(npid, code, lang)
+
+	statusInfo.Status = "200"
+	statusInfo.Info = "Submitted"
+	data, _ := json.Marshal(statusInfo)
+	fmt.Fprintf(w, string(data))
+	return
 }
 
 func userHandler(w http.ResponseWriter, r *http.Request) {

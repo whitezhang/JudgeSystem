@@ -23,6 +23,7 @@ type User struct {
 	Username     string  `bson:"username" json:"username"`
 	Password     string  `bson:"password" json:"password"`
 	Nickname     string  `bson:"nickname" json:"nickname"`
+	Email        string  `bson:"email" json:"email"`
 	IsChallenger bool    `bson:"ischallenger" json:"ischallenger"`
 	Score        float64 `bson:"score" json:"score"`
 	Privilege    string  `bson:"privilege" json:"privilege"`

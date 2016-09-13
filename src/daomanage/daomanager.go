@@ -5,7 +5,13 @@ import (
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"log"
+	"math"
 	"sync"
+)
+
+const (
+	PlbPerPage = 50
+	CstPerPage = 20
 )
 
 var (
@@ -17,6 +23,16 @@ var (
 type Manager struct {
 	serviceMap map[string]string
 	mutex      *sync.Mutex
+}
+
+type ContestInfoSet struct {
+	PagesCount  int
+	CstInfoList []Contest
+}
+
+type ProblemInfoSet struct {
+	PagesCount  int
+	ProInfoList []ProblemInfo
 }
 
 type ProblemInfo struct {
@@ -46,7 +62,7 @@ func (man *Manager) initConf(cfgFile string) (err error) {
 	return
 }
 
-func InsertRegister(uid, username, password, nickname, challenger string) (err error) {
+func InsertRegister(uid, username, password, nickname, challenger, email string) (err error) {
 	var userinfo User
 	var ischallenger bool
 	session, err := mgo.Dial(hostName)
@@ -67,7 +83,7 @@ func InsertRegister(uid, username, password, nickname, challenger string) (err e
 	} else {
 		ischallenger = false
 	}
-	err = collection.Insert(&User{uid, username, password, nickname, ischallenger, 0.0, "traveller"})
+	err = collection.Insert(&User{uid, username, password, nickname, email, ischallenger, 0.0, "traveller"})
 	if err != nil {
 		log.Printf("Error: Failed in register")
 		return err
@@ -108,22 +124,34 @@ func InsertSubmitQueue(pid int64, code string, lang string) (err error) {
 	return nil
 }
 
-func GetContestInRange(startIndex, endIndex int64) (contestInfo []Contest, err error) {
+func GetContestInRange(startIndex, endIndex int64) (contestInfoSet ContestInfoSet, err error) {
+	var contestInfo []Contest
+
 	session, err := mgo.Dial(hostName)
 	if err != nil {
 		log.Println("Connect MongoDB failed")
-		return []Contest{}, err
+		return ContestInfoSet{}, err
 	}
 	defer session.Close()
 
 	session.SetMode(mgo.Monotonic, true)
 	collection := session.DB(dbName).C("contest")
 
-	err = collection.Find(bson.M{"cid": bson.M{"$gte": startIndex, "$lte": endIndex}}).All(&contestInfo)
+	cnt, err := collection.Count()
+	cnt = int(math.Ceil(float64(cnt) / CstPerPage))
 	if err != nil {
-		log.Printf("No Contest indexing: from: %d to %d\n", startIndex, endIndex)
-		return []Contest{}, err
+		log.Printf("Get contest count error\n")
+		return ContestInfoSet{}, err
 	}
+
+	err = collection.Find(bson.M{"cid": bson.M{"$gte": startIndex, "$lte": endIndex}}).All(&contestInfo)
+	if err == nil {
+		log.Printf("No Contest indexing: from: %d to %d\n", startIndex, endIndex)
+		contestInfoSet.PagesCount = cnt
+		contestInfoSet.CstInfoList = contestInfo
+		return contestInfoSet, err
+	}
+
 	return
 }
 
@@ -146,21 +174,33 @@ func GetContestProblems(cid int64) (contestInfo []ContestProblem, err error) {
 	return contestInfo, nil
 }
 
-func GetProblemInRange(startIndex, endIndex int64) (problemInfo []ProblemInfo, err error) {
+//func GetProblemInRange(startIndex, endIndex int64) (problemInfo []ProblemInfo, err error) {
+func GetProblemInRange(startIndex, endIndex int64) (problemInfoSet ProblemInfoSet, err error) {
+	var problemInfo []ProblemInfo
+
 	session, err := mgo.Dial(hostName)
 	if err != nil {
 		log.Println("Connect MongoDB failed")
-		return []ProblemInfo{}, err
+		return ProblemInfoSet{}, err
 	}
 	defer session.Close()
 
 	session.SetMode(mgo.Monotonic, true)
 	collection := session.DB(dbName).C("problem")
 
-	err = collection.Find(bson.M{"pid": bson.M{"$gte": startIndex, "$lte": endIndex}}).Select(bson.M{"pid": 1, "title": 1, "solved": 1}).All(&problemInfo)
+	cnt, err := collection.Count()
+	cnt = int(math.Ceil(float64(cnt) / PlbPerPage))
 	if err != nil {
+		log.Printf("Get problem count error\n")
+		return ProblemInfoSet{}, err
+	}
+
+	err = collection.Find(bson.M{"pid": bson.M{"$gte": startIndex, "$lte": endIndex}}).Select(bson.M{"pid": 1, "title": 1, "solved": 1}).All(&problemInfo)
+	if err == nil {
 		log.Printf("No Problem Indexing: from %d to %d\n", startIndex, endIndex)
-		return []ProblemInfo{}, err
+		problemInfoSet.PagesCount = cnt
+		problemInfoSet.ProInfoList = problemInfo
+		return problemInfoSet, err
 	}
 	return
 }
