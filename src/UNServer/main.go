@@ -40,6 +40,7 @@ func main() {
 	http.HandleFunc("/slogin", loginHandler)
 	http.HandleFunc("/sregister", registHandler)
 	http.HandleFunc("/suser", userHandler)
+	http.HandleFunc("/sstatusinfo", statusInfoHandler)
 	http.HandleFunc("/sprobleminfo", problemInfoHandler)
 	http.HandleFunc("/sproblems", problemsHandler)
 	http.HandleFunc("/scontestinfo", contestInfoHandler)

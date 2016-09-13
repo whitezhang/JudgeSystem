@@ -10,8 +10,9 @@ import (
 )
 
 const (
-	PlbPerPage = 50
-	CstPerPage = 20
+	PlbPerPage  = 50
+	StatPerPage = 50
+	CstPerPage  = 20
 )
 
 var (
@@ -25,9 +26,18 @@ type Manager struct {
 	mutex      *sync.Mutex
 }
 
+/*
 type ContestInfoSet struct {
 	PageCount   int       `bson:"pagecount" json:"pagecount"`
 	CstInfoList []Contest `bson:"cstinfolist" json:"cstinfolist"`
+}
+
+type StatInfo struct {
+}
+
+type StatusInfoSet struct {
+	PageCount    int             `bson:"pagecount" json:"pagecount"`
+	StatInfoList []RuntimeStatus `bson:"statinfolist" json:"statinfolist"`
 }
 
 type ProblemInfoSet struct {
@@ -40,6 +50,7 @@ type ProblemInfo struct {
 	ProblemName string `bson:"title" json:"title"`
 	Solved      int64  `bson:"solved" json:"solved"`
 }
+*/
 
 func NewManager(cfgFile string) (man *Manager, err error) {
 	man = &Manager{}
@@ -62,7 +73,7 @@ func (man *Manager) initConf(cfgFile string) (err error) {
 	return
 }
 
-func InsertRegister(uid, username, password, nickname, challenger, email string) (err error) {
+func InsertRegister(email, username, password, challenger string) (err error) {
 	var userinfo User
 	var ischallenger bool
 	session, err := mgo.Dial(hostName)
@@ -74,7 +85,7 @@ func InsertRegister(uid, username, password, nickname, challenger, email string)
 	session.SetMode(mgo.Monotonic, true)
 	collection := session.DB(dbName).C("user")
 	err = collection.Find(bson.M{"username": username}).One(&userinfo)
-	if err != nil {
+	if err == nil {
 		log.Printf("The username %s has been registered", username)
 		return err
 	}
@@ -83,7 +94,7 @@ func InsertRegister(uid, username, password, nickname, challenger, email string)
 	} else {
 		ischallenger = false
 	}
-	err = collection.Insert(&User{uid, username, password, nickname, email, ischallenger, 0.0, "traveller"})
+	err = collection.Insert(&User{email, username, password, ischallenger, 0.0, "traveller"})
 	if err != nil {
 		log.Printf("Error: Failed in register")
 		return err
@@ -122,6 +133,36 @@ func InsertSubmitQueue(pid int64, code string, lang string) (err error) {
 		}
 	}
 	return nil
+}
+
+func GetStatusInRange(startIndex, endIndex int64) (statusInfoSet StatusInfoSet, err error) {
+	var statInfo []RuntimeStatus
+	session, err := mgo.Dial(hostName)
+	if err != nil {
+		log.Println("Connect MongoDB failed")
+		return StatusInfoSet{}, err
+	}
+	defer session.Close()
+
+	session.SetMode(mgo.Monotonic, true)
+	collection := session.DB(dbName).C("runtimestatus")
+
+	cnt, err := collection.Count()
+	cnt = int(math.Ceil(float64(cnt) / StatPerPage))
+	if err != nil {
+		log.Printf("Get runtimestatus count error\n")
+		return StatusInfoSet{}, err
+	}
+
+	err = collection.Find(bson.M{"pid": bson.M{"$gte": startIndex, "$lte": endIndex}}).Select(bson.M{"pid": 1, "status": 1, "memory": 1, "time": 1, "lang": 1}).All(&statInfo)
+	if err == nil {
+		log.Printf("No Runtimestatus indexing: from: %d to %d\n", startIndex, endIndex)
+		statusInfoSet.PageCount = cnt
+		statusInfoSet.StatInfoList = statInfo
+		return statusInfoSet, err
+	}
+
+	return
 }
 
 func GetContestInRange(startIndex, endIndex int64) (contestInfoSet ContestInfoSet, err error) {

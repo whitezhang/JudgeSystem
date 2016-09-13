@@ -21,8 +21,9 @@ const (
 
 	InfoHack = "So..so?"
 
-	PlbPerPage = 50
-	CstPerPage = 20
+	PlbPerPage  = 50
+	StatPerPage = 50
+	CstPerPage  = 20
 )
 
 var globalSessions *session.Manager
@@ -108,13 +109,11 @@ func registHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println("Parse Error: Register", err)
 		return
 	}
-	uid, _ := query["uid"]
+	email, _ := query["email"]
 	username, _ := query["username"]
 	password, _ := query["password"]
-	nickname, _ := query["nickname"]
-	email, _ := query["email"]
 	ischallenger, _ := query["ischallenger"]
-	if daomanage.InsertRegister(uid[0], username[0], password[0], nickname[0], email[0], ischallenger[0]) != nil {
+	if daomanage.InsertRegister(email[0], username[0], password[0], ischallenger[0]) != nil {
 		statusInfo.Status = 400
 		statusInfo.Info = InfoRegisterFailed
 		data, _ := json.Marshal(statusInfo)
@@ -225,6 +224,42 @@ func problemsHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, string(data))
 		return
 	}
+}
+
+func statusInfoHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		query url.Values
+		err   error
+	)
+	query, err = url.ParseQuery(r.URL.RawQuery)
+	if err != nil {
+		log.Println("Parse Error", err)
+		return
+	}
+
+	var page int64
+	if s, ok := query["page"]; ok {
+		if s[0] == "" {
+			page = 1
+		} else {
+			page, err = strconv.ParseInt(s[0], 10, 64)
+			if err != nil {
+				log.Println("re")
+				return
+			}
+		}
+	}
+
+	// Get status info
+	startIndex := StatPerPage * (page - 1)
+	endIndex := startIndex + StatPerPage
+	statInfo, err := daomanage.GetStatusInRange(startIndex, endIndex)
+	if err == nil {
+		data, _ := json.Marshal(statInfo)
+		fmt.Fprintf(w, string(data))
+		return
+	}
+	fmt.Fprintf(w, InfoHack)
 }
 
 func contestsHandler(w http.ResponseWriter, r *http.Request) {

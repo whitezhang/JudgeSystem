@@ -19,11 +19,9 @@ type Problem struct {
 }
 
 type User struct {
-	UID          string  `bson:"uid" json:"uid"`
+	Email        string  `bson:"email" json:"email"`
 	Username     string  `bson:"username" json:"username"`
 	Password     string  `bson:"password" json:"password"`
-	Nickname     string  `bson:"nickname" json:"nickname"`
-	Email        string  `bson:"email" json:"email"`
 	IsChallenger bool    `bson:"ischallenger" json:"ischallenger"`
 	Score        float64 `bson:"score" json:"score"`
 	Privilege    string  `bson:"privilege" json:"privilege"`
@@ -66,4 +64,26 @@ type RuntimeStatus struct {
 	Memory string `bson:"memory" json:"memory"`
 	Time   string `bson:"time" json:"time"`
 	Lang   string `bson:"lang" json:"lang"`
+}
+
+// Only for golang/javascript communication
+type ContestInfoSet struct {
+	PageCount   int       `bson:"pagecount" json:"pagecount"`
+	CstInfoList []Contest `bson:"cstinfolist" json:"cstinfolist"`
+}
+
+type StatusInfoSet struct {
+	PageCount    int             `bson:"pagecount" json:"pagecount"`
+	StatInfoList []RuntimeStatus `bson:"statinfolist" json:"statinfolist"`
+}
+
+type ProblemInfoSet struct {
+	PageCount   int           `bson:"pagecount" json:"pagecount"`
+	ProInfoList []ProblemInfo `bson:"proinfolist" json:"proinfolist"`
+}
+
+type ProblemInfo struct {
+	PID         int64  `bson:"pid" json:"pid"`
+	ProblemName string `bson:"title" json:"title"`
+	Solved      int64  `bson:"solved" json:"solved"`
 }
