@@ -26,13 +26,13 @@ type Manager struct {
 }
 
 type ContestInfoSet struct {
-	PagesCount  int
-	CstInfoList []Contest
+	PageCount   int       `bson:"pagecount" json:"pagecount"`
+	CstInfoList []Contest `bson:"cstinfolist" json:"cstinfolist"`
 }
 
 type ProblemInfoSet struct {
-	PagesCount  int
-	ProInfoList []ProblemInfo
+	PageCount   int           `bson:"pagecount" json:"pagecount"`
+	ProInfoList []ProblemInfo `bson:"proinfolist" json:"proinfolist"`
 }
 
 type ProblemInfo struct {
@@ -147,7 +147,7 @@ func GetContestInRange(startIndex, endIndex int64) (contestInfoSet ContestInfoSe
 	err = collection.Find(bson.M{"cid": bson.M{"$gte": startIndex, "$lte": endIndex}}).All(&contestInfo)
 	if err == nil {
 		log.Printf("No Contest indexing: from: %d to %d\n", startIndex, endIndex)
-		contestInfoSet.PagesCount = cnt
+		contestInfoSet.PageCount = cnt
 		contestInfoSet.CstInfoList = contestInfo
 		return contestInfoSet, err
 	}
@@ -198,7 +198,7 @@ func GetProblemInRange(startIndex, endIndex int64) (problemInfoSet ProblemInfoSe
 	err = collection.Find(bson.M{"pid": bson.M{"$gte": startIndex, "$lte": endIndex}}).Select(bson.M{"pid": 1, "title": 1, "solved": 1}).All(&problemInfo)
 	if err == nil {
 		log.Printf("No Problem Indexing: from %d to %d\n", startIndex, endIndex)
-		problemInfoSet.PagesCount = cnt
+		problemInfoSet.PageCount = cnt
 		problemInfoSet.ProInfoList = problemInfo
 		return problemInfoSet, err
 	}
