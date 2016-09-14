@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"time"
 	//"service/auth"
 	"strconv"
 )
@@ -38,22 +39,64 @@ func initSessionManager() {
 	go globalSessions.GC()
 }
 
-func sessionSet(w http.ResponseWriter, r *http.Request) {
+func sessionSet(w http.ResponseWriter, r *http.Request, session string) {
 	sess, _ := globalSessions.SessionStart(w, r)
 	defer sess.SessionRelease(w)
-	sess.Set("sessionindex", r.FormValue("sessionindex"))
+	sess.Set(session, session)
+	log.Println("set", sess.Get(session), session)
 }
 
 func sessionHandler(w http.ResponseWriter, r *http.Request) {
-	sess, _ := globalSessions.SessionStart(w, r)
-	log.Println(sess)
-	defer sess.SessionRelease(w)
-	sessionindex := sess.Get("sessionindex")
-	log.Println(sessionindex)
-	if sessionindex != nil {
-		fmt.Fprintf(w, "fuck")
+	var statusInfo StatusInfo
+
+	cookie, err := r.Cookie("gosessionid")
+	log.Println(cookie, cookie.Value)
+	if err != nil {
+		statusInfo.Status = 400
+		statusInfo.Info = InfoLoginFailed
+		data, _ := json.Marshal(statusInfo)
+		fmt.Fprintf(w, string(data))
 		return
 	}
+
+	sess, _ := globalSessions.SessionStart(w, r)
+	defer sess.SessionRelease(w)
+
+	sessionCache := sess.Get(cookie.Value)
+
+	if sessionCache != nil {
+		statusInfo.Status = 200
+		statusInfo.Info = InfoLoginSucc
+		data, _ := json.Marshal(statusInfo)
+		fmt.Fprintf(w, string(data))
+		return
+	}
+	statusInfo.Status = 400
+	statusInfo.Info = InfoLoginFailed
+	data, _ := json.Marshal(statusInfo)
+	fmt.Fprintf(w, string(data))
+	return
+}
+
+func logoutHandler(w http.ResponseWriter, r *http.Request) {
+	var statusInfo StatusInfo
+	cookie, err := r.Cookie("gosessionid")
+	if err != nil {
+		statusInfo.Status = 400
+		statusInfo.Info = InfoLoginFailed
+		data, _ := json.Marshal(statusInfo)
+		fmt.Fprintf(w, string(data))
+		return
+	}
+
+	sess, _ := globalSessions.SessionStart(w, r)
+	defer sess.SessionRelease(w)
+	sess.Delete(cookie)
+
+	statusInfo.Status = 200
+	statusInfo.Info = InfoLoginSucc
+	data, _ := json.Marshal(statusInfo)
+	fmt.Fprintf(w, string(data))
 	return
 }
 
@@ -144,23 +187,29 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	// Get user info
 	if s, ok := query["username"]; ok {
 		userInfo, err = daomanage.GetUserInfo("username", s[0])
-		if p, ok := query["password"]; ok {
-			if p[0] == userInfo.Password {
-				sessionSet(w, r)
+		if err == nil {
+			if p, ok := query["password"]; ok {
+				if p[0] == userInfo.Password {
+					sessionSet(w, r, s[0])
 
-				statusInfo.Status = 200
-				statusInfo.Info = userInfo.Username
-				data, _ := json.Marshal(statusInfo)
-				fmt.Fprintf(w, string(data))
-				return
+					tNow := time.Now()
+					cookie := http.Cookie{Name: "gosessionid", Value: s[0], Expires: tNow.AddDate(1, 0, 0)}
+					http.SetCookie(w, &cookie)
+
+					statusInfo.Status = 200
+					statusInfo.Info = userInfo.Username
+					data, _ := json.Marshal(statusInfo)
+					fmt.Fprintf(w, string(data))
+					return
+				}
 			}
 		}
-		statusInfo.Status = 400
-		statusInfo.Info = InfoLoginFailed
-		data, _ := json.Marshal(statusInfo)
-		fmt.Fprintf(w, string(data))
-		return
 	}
+	statusInfo.Status = 400
+	statusInfo.Info = InfoLoginFailed
+	data, _ := json.Marshal(statusInfo)
+	fmt.Fprintf(w, string(data))
+	return
 }
 
 func problemInfoHandler(w http.ResponseWriter, r *http.Request) {

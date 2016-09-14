@@ -36,8 +36,9 @@ func main() {
 		http.HandleFunc("/contestinfo", singleContestHandler)
 	*/
 
-	http.HandleFunc("/ssession", sessionHandler)
+	http.HandleFunc("/sislogin", sessionHandler)
 	http.HandleFunc("/slogin", loginHandler)
+	http.HandleFunc("/slogout", logoutHandler)
 	http.HandleFunc("/sregister", registHandler)
 	http.HandleFunc("/suser", userHandler)
 	http.HandleFunc("/sstatusinfo", statusInfoHandler)
