@@ -2,7 +2,7 @@ package main
 
 import (
 	//l4g "classified-lib/golang-lib/log"
-	//ctx "context"
+	ctx "context"
 	"daomanage"
 	"encoding/json"
 	"fmt"
@@ -21,13 +21,13 @@ const (
 	InfoRegisterFailed = "The username has been used"
 
 	InfoHack = "So..so?"
-
-	PlbPerPage  = 50
-	StatPerPage = 50
-	CstPerPage  = 20
 )
 
-var globalSessions *session.Manager
+var (
+	PlbPerPage  = ctx.SvrCtx.SvrCfg.WebInfo.ProblemPerPage
+	StatPerPage = ctx.SvrCtx.SvrCfg.WebInfo.StatusPerPage
+	CstPerPage  = ctx.SvrCtx.SvrCfg.WebInfo.ContestPerPage
+)
 
 type StatusInfo struct {
 	Status int    `bson:"status" json:"status"`

@@ -13,14 +13,21 @@ type Log4goCfg struct {
 	HasStdout   bool
 }
 
+type WebInfoCfg struct {
+	ProblemPerPage int64
+	StatusPerPage  int64
+	ContestPerPage int64
+}
+
 type ServerCfg struct {
 	Port   int
 	NumCPU int
 }
 
 type ServerConfig struct {
-	Server ServerCfg
-	Log4go Log4goCfg
+	Server  ServerCfg
+	Log4go  Log4goCfg
+	WebInfo WebInfoCfg
 }
 
 func InitConfig(cfg *ServerConfig, cfgFile string) error {

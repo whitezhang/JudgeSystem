@@ -2,6 +2,7 @@ package daomanage
 
 import (
 	"code.google.com/p/gcfg"
+	ctx "context"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"log"
@@ -9,10 +10,10 @@ import (
 	"sync"
 )
 
-const (
-	PlbPerPage  = 50
-	StatPerPage = 50
-	CstPerPage  = 20
+var (
+	PlbPerPage  = ctx.SvrCtx.SvrCfg.WebInfo.ProblemPerPage
+	StatPerPage = ctx.SvrCtx.SvrCfg.WebInfo.StatusPerPage
+	CstPerPage  = ctx.SvrCtx.SvrCfg.WebInfo.ContestPerPage
 )
 
 var (
