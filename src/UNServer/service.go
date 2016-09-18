@@ -6,7 +6,7 @@ import (
 	"daomanage"
 	"encoding/json"
 	"fmt"
-	"github.com/astaxie/beego/session"
+	"github.com/icza/session"
 	"log"
 	"net/http"
 	"net/url"
@@ -35,86 +35,42 @@ type StatusInfo struct {
 }
 
 func initSessionManager() {
-	globalSessions, _ = session.NewManager("memory", `{"cookieName":"gosessionid","gclifetime":3600}`)
-	go globalSessions.GC()
-}
-
-func sessionSet(w http.ResponseWriter, r *http.Request, session string) {
-	sess, _ := globalSessions.SessionStart(w, r)
-	defer sess.SessionRelease(w)
-	sess.Set(session, session)
-	log.Println("set", sess.Get(session), session)
+	session.Global.Close()
+	session.Global = session.NewCookieManagerOptions(session.NewInMemStore(), &session.CookieMngrOptions{AllowHTTP: true})
 }
 
 func sessionHandler(w http.ResponseWriter, r *http.Request) {
 	var statusInfo StatusInfo
 
-	cookie, err := r.Cookie("gosessionid")
-	log.Println(cookie, cookie.Value)
-	if err != nil {
+	sess := session.Get(r)
+	log.Println("sess", sess)
+	if sess != nil {
+		statusInfo.Status = 200
+		statusInfo.Info = sess.CAttr("username").(string)
+		data, _ := json.Marshal(statusInfo)
+		fmt.Fprintf(w, string(data))
+		return
+	} else {
 		statusInfo.Status = 400
 		statusInfo.Info = InfoLoginFailed
 		data, _ := json.Marshal(statusInfo)
 		fmt.Fprintf(w, string(data))
 		return
 	}
+}
 
-	sess, _ := globalSessions.SessionStart(w, r)
-	defer sess.SessionRelease(w)
-
-	sessionCache := sess.Get(cookie.Value)
-
-	if sessionCache != nil {
+func logoutHandler(w http.ResponseWriter, r *http.Request) {
+	var statusInfo StatusInfo
+	sess := session.Get(r)
+	if sess != nil {
+		session.Remove(sess, w)
 		statusInfo.Status = 200
 		statusInfo.Info = InfoLoginSucc
 		data, _ := json.Marshal(statusInfo)
 		fmt.Fprintf(w, string(data))
 		return
 	}
-	statusInfo.Status = 400
-	statusInfo.Info = InfoLoginFailed
-	data, _ := json.Marshal(statusInfo)
-	fmt.Fprintf(w, string(data))
-	return
 }
-
-func logoutHandler(w http.ResponseWriter, r *http.Request) {
-	var statusInfo StatusInfo
-	cookie, err := r.Cookie("gosessionid")
-	if err != nil {
-		statusInfo.Status = 400
-		statusInfo.Info = InfoLoginFailed
-		data, _ := json.Marshal(statusInfo)
-		fmt.Fprintf(w, string(data))
-		return
-	}
-
-	sess, _ := globalSessions.SessionStart(w, r)
-	defer sess.SessionRelease(w)
-	sess.Delete(cookie)
-
-	statusInfo.Status = 200
-	statusInfo.Info = InfoLoginSucc
-	data, _ := json.Marshal(statusInfo)
-	fmt.Fprintf(w, string(data))
-	return
-}
-
-// func loginCheck(w http.ResponseWriter, r *http.Request) {
-// 	sess, _ := globalSessions.SessionStart(w, r)
-// 	defer sess.SessionRelease(w)
-// 	username := sess.Get("username")
-// 	fmt.Println(username, sess)
-// 	if r.Method == "GET" {
-// 		fmt.Println("get")
-// 		// t, _ := template.ParseFiles("login.gtpl")
-// 		// t.Execute(w, nil)
-// 	} else {
-// 		fmt.Println("username:", r.Form["username"])
-// 		sess.Set("username", r.Form["username"])
-// 		fmt.Println("password:", r.Form["password"])
-// 	}
-// }
 
 /*
 func isAuthorized(query url.Values) bool {
@@ -190,7 +146,10 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		if err == nil {
 			if p, ok := query["password"]; ok {
 				if p[0] == userInfo.Password {
-					sessionSet(w, r, s[0])
+					sess := session.NewSessionOptions(&session.SessOptions{
+						CAttrs: map[string]interface{}{"username": s[0]},
+					})
+					session.Add(sess, w)
 
 					tNow := time.Now()
 					cookie := http.Cookie{Name: "gosessionid", Value: s[0], Expires: tNow.AddDate(1, 0, 0)}
