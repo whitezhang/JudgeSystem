@@ -51,6 +51,6 @@ IP:PORT/scontestinfo?cid=xxx
 
 #### Submit the answer
 ```
-IP:PORT/ssubmit?pid=xxx&code=xxx&lang=xxx
+IP:PORT/ssubmit?pid=xxx&code=xxx&lang=xxx&author=xxx
 ```
 - Return 200 if succeed else 400

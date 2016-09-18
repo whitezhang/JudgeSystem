@@ -57,13 +57,16 @@ type ExSubmitQueue struct {
 }
 
 type RuntimeStatus struct {
-	Index  string `bson:"_index" json:"_index"`
-	PID    int64  `bson:"pid" json:"pid"`
-	Status string `bson:"status" json:"status"`
-	Code   string `bson:"code" json:"code"`
-	Memory string `bson:"memory" json:"memory"`
-	Time   string `bson:"time" json:"time"`
-	Lang   string `bson:"lang" json:"lang"`
+	Index   string `bson:"_index" json:"_index"`
+	PID     int64  `bson:"pid" json:"pid"`
+	SbmTime string `bson:"sbmtime" json:"sbmtime"`
+	Status  string `bson:"status" json:"status"`
+	Code    string `bson:"code" json:"code"`
+	Memory  string `bson:"memory" json:"memory"`
+	Time    string `bson:"time" json:"time"`
+	CodeLen string `bson:"codelen" json:"codelen"`
+	Lang    string `bson:"lang" json:"lang"`
+	Author  string `bson:"author" json:"author"`
 }
 
 // Only for golang/javascript communication

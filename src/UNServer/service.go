@@ -374,13 +374,14 @@ func submitHandler(w http.ResponseWriter, r *http.Request) {
 	pid := r.PostFormValue("pid")
 	code := r.PostFormValue("code")
 	lang := r.PostFormValue("lang")
+	author := r.PostFormValue("author")
 
 	npid, err := strconv.ParseInt(pid, 10, 32)
 	if err != nil {
 		log.Println("ParseInt Error", err)
 		return
 	}
-	daomanage.InsertSubmitQueue(npid, code, lang)
+	daomanage.InsertSubmitQueue(npid, code, lang, author)
 
 	statusInfo.Status = 200
 	statusInfo.Info = "Submitted"
