@@ -24,9 +24,12 @@ const (
 )
 
 var (
-	PlbPerPage  = ctx.SvrCtx.SvrCfg.WebInfo.ProblemPerPage
-	StatPerPage = ctx.SvrCtx.SvrCfg.WebInfo.StatusPerPage
-	CstPerPage  = ctx.SvrCtx.SvrCfg.WebInfo.ContestPerPage
+	//PlbPerPage  = ctx.SvrCtx.SvrCfg.WebInfo.ProblemPerPage
+	//StatPerPage = ctx.SvrCtx.SvrCfg.WebInfo.StatusPerPage
+	//CstPerPage  = ctx.SvrCtx.SvrCfg.WebInfo.ContestPerPage
+	PlbPerPage  int64
+	StatPerPage int64
+	CstPerPage  int64
 )
 
 type StatusInfo struct {
@@ -37,6 +40,14 @@ type StatusInfo struct {
 func initSessionManager() {
 	session.Global.Close()
 	session.Global = session.NewCookieManagerOptions(session.NewInMemStore(), &session.CookieMngrOptions{AllowHTTP: true})
+}
+
+func initService() {
+	initSessionManager()
+
+	PlbPerPage = ctx.SvrCtx.SvrCfg.WebInfo.ProblemPerPage
+	StatPerPage = ctx.SvrCtx.SvrCfg.WebInfo.StatusPerPage
+	CstPerPage = ctx.SvrCtx.SvrCfg.WebInfo.ContestPerPage
 }
 
 func sessionHandler(w http.ResponseWriter, r *http.Request) {
@@ -224,6 +235,7 @@ func problemsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	startIndex := PlbPerPage * (page - 1)
 	endIndex := startIndex + PlbPerPage
+	log.Println(PlbPerPage, startIndex, endIndex)
 
 	// Get Problems
 	problemInfoList, err := daomanage.GetProblemInRange(startIndex, endIndex)

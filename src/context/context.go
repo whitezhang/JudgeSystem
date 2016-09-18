@@ -6,7 +6,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	// "log"
+	//"log"
 	//"service/auth"
 )
 
@@ -48,7 +48,7 @@ func InitServerContext() error {
 	if *daoCfgFile == "" {
 		return errors.New("Empty Dao Config")
 	}
-	if daoMan, err := daomanage.NewManager(*daoCfgFile); err == nil {
+	if daoMan, err := daomanage.NewManager(*daoCfgFile, SvrCtx.SvrCfg.WebInfo.ProblemPerPage, SvrCtx.SvrCfg.WebInfo.StatusPerPage, SvrCtx.SvrCfg.WebInfo.ContestPerPage); err == nil {
 		SvrCtx.DaoMan = daoMan
 	} else {
 		return fmt.Errorf("Failed to init dao manager, error: %s", err)

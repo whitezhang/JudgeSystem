@@ -2,7 +2,6 @@ package daomanage
 
 import (
 	"code.google.com/p/gcfg"
-	ctx "context"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"log"
@@ -11,9 +10,9 @@ import (
 )
 
 var (
-	PlbPerPage  = ctx.SvrCtx.SvrCfg.WebInfo.ProblemPerPage
-	StatPerPage = ctx.SvrCtx.SvrCfg.WebInfo.StatusPerPage
-	CstPerPage  = ctx.SvrCtx.SvrCfg.WebInfo.ContestPerPage
+	plbPerPage  int64
+	statPerPage int64
+	cstPerPage  int64
 )
 
 var (
@@ -27,41 +26,15 @@ type Manager struct {
 	mutex      *sync.Mutex
 }
 
-/*
-type ContestInfoSet struct {
-	PageCount   int       `bson:"pagecount" json:"pagecount"`
-	CstInfoList []Contest `bson:"cstinfolist" json:"cstinfolist"`
-}
-
-type StatInfo struct {
-}
-
-type StatusInfoSet struct {
-	PageCount    int             `bson:"pagecount" json:"pagecount"`
-	StatInfoList []RuntimeStatus `bson:"statinfolist" json:"statinfolist"`
-}
-
-type ProblemInfoSet struct {
-	PageCount   int           `bson:"pagecount" json:"pagecount"`
-	ProInfoList []ProblemInfo `bson:"proinfolist" json:"proinfolist"`
-}
-
-type ProblemInfo struct {
-	PID         int64  `bson:"pid" json:"pid"`
-	ProblemName string `bson:"title" json:"title"`
-	Solved      int64  `bson:"solved" json:"solved"`
-}
-*/
-
-func NewManager(cfgFile string) (man *Manager, err error) {
+func NewManager(cfgFile string, plbNum, statNum, cstNum int64) (man *Manager, err error) {
 	man = &Manager{}
 	man.serviceMap = make(map[string]string)
 	man.mutex = new(sync.Mutex)
-	err = man.initConf(cfgFile)
+	err = man.initConf(cfgFile, plbNum, statNum, cstNum)
 	return
 }
 
-func (man *Manager) initConf(cfgFile string) (err error) {
+func (man *Manager) initConf(cfgFile string, plbNum, statNum, cstNum int64) (err error) {
 	var cfg daoConfig
 	err = gcfg.ReadFileInto(&cfg, cfgFile)
 	if err != nil {
@@ -70,6 +43,9 @@ func (man *Manager) initConf(cfgFile string) (err error) {
 	hostName = cfg.Dao.HostName
 	port = cfg.Dao.Port
 	dbName = cfg.Dao.DBName
+	plbPerPage = plbNum
+	statPerPage = statNum
+	cstPerPage = cstNum
 	log.Printf("Dao conf: %s:%s:%s\n", hostName, port, dbName)
 	return
 }
@@ -149,7 +125,7 @@ func GetStatusInRange(startIndex, endIndex int64) (statusInfoSet StatusInfoSet, 
 	collection := session.DB(dbName).C("runtimestatus")
 
 	cnt, err := collection.Count()
-	cnt = int(math.Ceil(float64(cnt) / StatPerPage))
+	cnt = int(math.Ceil(float64(cnt) / float64(statPerPage)))
 	if err != nil {
 		log.Printf("Get runtimestatus count error\n")
 		return StatusInfoSet{}, err
@@ -180,7 +156,7 @@ func GetContestInRange(startIndex, endIndex int64) (contestInfoSet ContestInfoSe
 	collection := session.DB(dbName).C("contest")
 
 	cnt, err := collection.Count()
-	cnt = int(math.Ceil(float64(cnt) / CstPerPage))
+	cnt = int(math.Ceil(float64(cnt) / float64(cstPerPage)))
 	if err != nil {
 		log.Printf("Get contest count error\n")
 		return ContestInfoSet{}, err
@@ -231,7 +207,7 @@ func GetProblemInRange(startIndex, endIndex int64) (problemInfoSet ProblemInfoSe
 	collection := session.DB(dbName).C("problem")
 
 	cnt, err := collection.Count()
-	cnt = int(math.Ceil(float64(cnt) / PlbPerPage))
+	cnt = int(math.Ceil(float64(cnt) / float64(plbPerPage)))
 	if err != nil {
 		log.Printf("Get problem count error\n")
 		return ProblemInfoSet{}, err

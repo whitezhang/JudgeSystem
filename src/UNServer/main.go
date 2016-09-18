@@ -12,7 +12,7 @@ import (
 
 func main() {
 	ctx.InitServerContext()
-	initSessionManager()
+	initService()
 
 	runtime.GOMAXPROCS(ctx.SvrCtx.SvrCfg.Server.NumCPU)
 	port := fmt.Sprintf(":%d", ctx.SvrCtx.SvrCfg.Server.Port)
