@@ -6,6 +6,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 	"log"
 	"math"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -83,7 +84,7 @@ func InsertRegister(email, username, password, challenger string) (err error) {
 func InsertSubmitQueue(pid int64, code string, lang string, author string) (err error) {
 	var exSbtQue []ExSubmitQueue
 	sbmtime := time.Now().Format("2006-01-02 15:04:05")
-	codelen := string(len(code))
+	codelen := strconv.Itoa(len(code))
 
 	session, err := mgo.Dial(hostName)
 	if err != nil {
