@@ -202,7 +202,7 @@ int compile(int lang) {
         int status = 0;
         waitpid(pid, &status, 0);
         if(DEBUG) {
-            printf("status=%d\n", status);
+            printf("Compiling status=%d\n", status);
         }
         return status;
     }
@@ -417,7 +417,7 @@ void mv_code2runtime(problem_runtime *pr_list[BATCH_SIZE]) {
         strcpy(pr_list[index]->lang, lang);
         strcpy(pr_list[index]->oid, oid);
         pr_list[index]->pid = pid;
-        if(!strcmp(lang, "C")) {
+        if(!strcmp(lang, "c")) {
             strcat(pathname, "Main.c");
         }
         else if(!strcmp(lang, "CPP")) {
@@ -450,7 +450,6 @@ int process_smtqueue(problem_runtime *pr_list[BATCH_SIZE]) {
 
 void update_solution(const char *oid, const int jdg_ret, const int mem_peak, const int time_used) {
     mongo::client::initialize();
-    printf("start\n");
     try {
         mongo::DBClientConnection c;
 
@@ -460,7 +459,6 @@ void update_solution(const char *oid, const int jdg_ret, const int mem_peak, con
 
         c.connect(DB_HOST);
         c.update("unsys.runtimestatus", BSON("_index" << oid), BSON("$set" << BSON( "status"<< F_SET[jdg_ret]<< "memory"<< c_mem_peak<< "time"<< c_time_used)));
-        printf("done\n");
     } catch(const mongo::DBException &e) {
         printf("connection err\n");
     }
@@ -479,7 +477,8 @@ int process_single_submit(problem_runtime *pr_list) {
     }
     chdir(pr_list->pathname);
     if(SUCCESS != compile(lang)) {
-        return F_CE;
+        update_solution(pr_list->oid, F_CE, 0, 0);
+        return 0;
     }
     pid_t pidApp = fork();
     if(pidApp == 0) {
@@ -497,15 +496,14 @@ int process_single_submit(problem_runtime *pr_list) {
             printf("Judge Result in Progress: %d\n", jdg_ret);
         }
         update_solution(pr_list->oid, jdg_ret, mem_peak, time_used);
-        return jdg_ret;
+        return 0;
     }
 }
 
 void process_all_submits(problem_runtime *pr_list[BATCH_SIZE]) {
     for(int i = 0; i < BATCH_SIZE; i++) {
         if(pr_list[i]->pathname[0] == '\0') continue;
-        int retval = process_single_submit(pr_list[i]);
-        printf("Judge Result: %d\n", retval);
+        process_single_submit(pr_list[i]);
     }
 }
 
