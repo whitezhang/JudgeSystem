@@ -4,8 +4,9 @@ Dev
 
 ### TECH
 - Docker
-- Golang
-- AngularJS
+- Golang (https://golang.org/)
+- AngularJS (discarded)
+- React
 - MongoDB
 - C/C++
 
