@@ -2,6 +2,7 @@ package daomanage
 
 import (
 	"code.google.com/p/gcfg"
+	"errors"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"log"
@@ -65,8 +66,8 @@ func InsertRegister(email, username, password, challenger string) (err error) {
 	collection := session.DB(dbName).C("user")
 	err = collection.Find(bson.M{"username": username}).One(&userinfo)
 	if err == nil {
-		log.Printf("The username %s has been registered", username)
-		return err
+		log.Printf("The username %s has been registed", username)
+		return errors.New("The username has been registed")
 	}
 	if challenger == "1" {
 		ischallenger = true

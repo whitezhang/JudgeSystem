@@ -3,14 +3,14 @@ var app = angular.module('myApp', []);
 app.controller('formCtrl',
     function($scope, $http) {
         $scope.signin = function() {
-            $http.get("http://localhost:8090/slogin", {
+            $http.get("http://114.215.125.77:8090/slogin", {
                 params: {
                     username: $scope.username,
                     password: $scope.password
                 }
             }).success(function(response) {
                 if (response.Status == "OK") {
-                    alert("Yes"); // TODO
+                    //alert("Yes"); // TODO
                 }
             });
         };
@@ -24,7 +24,7 @@ app.controller('customersCtrl',
         switch (pathname) {
             case "contests":
                 var pid = url.substring(url.lastIndexOf("=") + 1, url.length);
-                $http.get("http://localhost:8090/scontests", {
+                $http.get("http://114.215.125.77:8090/scontests", {
                     params: {
                         pid: pid,
                         ipaddr: "defalut"
@@ -37,7 +37,7 @@ app.controller('customersCtrl',
                 break;
             case "contestinfo":
                 var cid = url.substring(url.lastIndexOf("=") + 1, url.length);
-                $http.get("http://localhost:8090/scontestinfo", {
+                $http.get("http://114.215.125.77:8090/scontestinfo", {
                     params: {
                         cid: cid,
                         ipaddr: "defalut"
@@ -48,7 +48,7 @@ app.controller('customersCtrl',
                 break;
             case "problems":
                 var page = url.substring(url.lastIndexOf("=") + 1, url.length);
-                $http.get("http://localhost:8090/sproblems", {
+                $http.get("http://114.215.125.77:8090/sproblems", {
                     params: {
                         page: page,
                         ipaddr: "defalut"
@@ -59,7 +59,7 @@ app.controller('customersCtrl',
                 break;
             case "problem":
                 var pid = url.substring(url.lastIndexOf("=") + 1, url.length);
-                $http.get("http://localhost:8090/sprobleminfo", {
+                $http.get("http://114.215.125.77:8090/sprobleminfo", {
                     params: {
                         pid: pid,
                         ipaddr: "defalut"

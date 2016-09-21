@@ -131,7 +131,7 @@ func registHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	statusInfo.Status = 200
-	statusInfo.Info = InfoLoginSucc
+	statusInfo.Info = username[0]
 	data, _ := json.Marshal(statusInfo)
 	fmt.Fprintf(w, string(data))
 	return
