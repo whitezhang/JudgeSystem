@@ -10,6 +10,11 @@ Dev
 - MongoDB
 - C/C++
 
+### Main Parts
+- ./core -> judgerclient
+- ./web -> web
+- ./src -> golang web service
+
 ### How to use
 You'd better build this JudgeSystem in a cleaned Centos System, such as Docker.
 ```sh 
