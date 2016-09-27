@@ -10,9 +10,9 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"time"
-	//"service/auth"
+	"service/encrypt"
 	"strconv"
+	"time"
 )
 
 const (
@@ -122,8 +122,10 @@ func registHandler(w http.ResponseWriter, r *http.Request) {
 	email, _ := query["email"]
 	username, _ := query["username"]
 	password, _ := query["password"]
+	encryptedPwd := encrypt.DoEncryption(password[0])
 	ischallenger, _ := query["ischallenger"]
-	if daomanage.InsertRegister(email[0], username[0], password[0], ischallenger[0]) != nil {
+
+	if daomanage.InsertRegister(email[0], username[0], encryptedPwd, ischallenger[0]) != nil {
 		statusInfo.Status = 400
 		statusInfo.Info = InfoRegisterFailed
 		data, _ := json.Marshal(statusInfo)
@@ -153,12 +155,14 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get user info
 	if s, ok := query["username"]; ok {
-		userInfo, err = daomanage.GetUserInfo("username", s[0])
+		userInfo, err = daomanage.GetUserInfo("email", s[0])
 		if err == nil {
 			if p, ok := query["password"]; ok {
-				if p[0] == userInfo.Password {
+				encryptedPwd := encrypt.DoEncryption(p[0])
+
+				if encryptedPwd == userInfo.Password {
 					sess := session.NewSessionOptions(&session.SessOptions{
-						CAttrs: map[string]interface{}{"username": s[0]},
+						CAttrs: map[string]interface{}{"username": userInfo.Username},
 					})
 					session.Add(sess, w)
 
