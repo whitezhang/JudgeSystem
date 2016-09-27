@@ -27,9 +27,9 @@ var (
 	//PlbPerPage  = ctx.SvrCtx.SvrCfg.WebInfo.ProblemPerPage
 	//StatPerPage = ctx.SvrCtx.SvrCfg.WebInfo.StatusPerPage
 	//CstPerPage  = ctx.SvrCtx.SvrCfg.WebInfo.ContestPerPage
-	PlbPerPage  int64
-	StatPerPage int64
-	CstPerPage  int64
+	PlbPerPage  int
+	StatPerPage int
+	CstPerPage  int
 )
 
 type StatusInfo struct {
@@ -196,7 +196,8 @@ func problemInfoHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get problem info
 	if s, ok := query["pid"]; ok {
-		pid, err := strconv.ParseInt(s[0], 10, 64)
+		//pid, err := strconv.ParseInt(s[0], 10, 0)
+		pid, err := strconv.Atoi(s[0])
 		if err != nil {
 			return
 		}
@@ -221,12 +222,13 @@ func problemsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var page int64
+	var page int
 	if s, ok := query["page"]; ok {
 		if s[0] == "" {
 			page = 1
 		} else {
-			page, err = strconv.ParseInt(s[0], 10, 64)
+			//page, err = strconv.ParseInt(s[0], 10, 64)
+			page, err = strconv.Atoi(s[0])
 			if err != nil {
 				log.Println("re")
 				return
@@ -257,12 +259,13 @@ func statusInfoHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var page int64
+	var page int
 	if s, ok := query["page"]; ok {
 		if s[0] == "" {
 			page = 1
 		} else {
-			page, err = strconv.ParseInt(s[0], 10, 64)
+			//page, err = strconv.ParseInt(s[0], 10, 64)
+			page, err = strconv.Atoi(s[0])
 			if err != nil {
 				log.Println("re")
 				return
@@ -294,12 +297,13 @@ func contestsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var page int64
+	var page int
 	if s, ok := query["page"]; ok {
 		if s[0] == "" {
 			page = 1
 		} else {
-			page, err = strconv.ParseInt(s[0], 10, 64)
+			//page, err = strconv.ParseInt(s[0], 10, 64)
+			page, err = strconv.Atoi(s[0])
 			if err != nil {
 				log.Println("re")
 				return
@@ -327,11 +331,11 @@ func contestInfoHandler(w http.ResponseWriter, r *http.Request) {
 	)
 
 	type ContestProblem struct {
-		CID         int64  `bson:"cid" json:"cid"`
-		PID         int64  `bson:"pid" json:"pid"`
+		CID         int    `bson:"cid" json:"cid"`
+		PID         int    `bson:"pid" json:"pid"`
 		ProblemName string `bson:"problemname" json:"problemname"`
-		Solved      int64  `bson:"solved" json:"solved"`
-		Score       int64  `bson:"score" json:"score"`
+		Solved      int    `bson:"solved" json:"solved"`
+		Score       int    `bson:"score" json:"score"`
 	}
 	var contestProblemList []ContestProblem
 
@@ -343,7 +347,8 @@ func contestInfoHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get contest info
 	if s, ok := query["cid"]; ok {
-		cid, err := strconv.ParseInt(s[0], 10, 64)
+		//cid, err := strconv.ParseInt(s[0], 10, 64)
+		cid, err := strconv.Atoi(s[0])
 		if err != nil {
 			return
 		}
@@ -376,7 +381,8 @@ func submitHandler(w http.ResponseWriter, r *http.Request) {
 	lang := r.PostFormValue("lang")
 	author := r.PostFormValue("author")
 
-	npid, err := strconv.ParseInt(pid, 10, 32)
+	//npid, err := strconv.ParseInt(pid, 10, 32)
+	npid, err := strconv.Atoi(pid)
 	if err != nil {
 		log.Println("ParseInt Error", err)
 		return

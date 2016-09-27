@@ -14,9 +14,9 @@ type Log4goCfg struct {
 }
 
 type WebInfoCfg struct {
-	ProblemPerPage int64
-	StatusPerPage  int64
-	ContestPerPage int64
+	ProblemPerPage int
+	StatusPerPage  int
+	ContestPerPage int
 }
 
 type ServerCfg struct {

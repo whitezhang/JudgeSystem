@@ -13,9 +13,9 @@ import (
 )
 
 var (
-	plbPerPage  int64
-	statPerPage int64
-	cstPerPage  int64
+	plbPerPage  int
+	statPerPage int
+	cstPerPage  int
 )
 
 var (
@@ -29,7 +29,7 @@ type Manager struct {
 	mutex      *sync.Mutex
 }
 
-func NewManager(cfgFile string, plbNum, statNum, cstNum int64) (man *Manager, err error) {
+func NewManager(cfgFile string, plbNum, statNum, cstNum int) (man *Manager, err error) {
 	man = &Manager{}
 	man.serviceMap = make(map[string]string)
 	man.mutex = new(sync.Mutex)
@@ -37,7 +37,7 @@ func NewManager(cfgFile string, plbNum, statNum, cstNum int64) (man *Manager, er
 	return
 }
 
-func (man *Manager) initConf(cfgFile string, plbNum, statNum, cstNum int64) (err error) {
+func (man *Manager) initConf(cfgFile string, plbNum, statNum, cstNum int) (err error) {
 	var cfg daoConfig
 	err = gcfg.ReadFileInto(&cfg, cfgFile)
 	if err != nil {
@@ -53,7 +53,12 @@ func (man *Manager) initConf(cfgFile string, plbNum, statNum, cstNum int64) (err
 	return
 }
 
-func GetNextID(idtype string) (index int64, err error) {
+func GetNextID(idtype string) (index int, err error) {
+	type Index struct {
+		index int
+	}
+	var idx Index
+
 	session, err := mgo.Dial(hostName)
 	if err != nil {
 		log.Println("Connect MongoDB failed")
@@ -64,17 +69,19 @@ func GetNextID(idtype string) (index int64, err error) {
 	collection := session.DB(dbName).C("idmanager")
 
 	err = collection.Update(bson.M{"name": idtype}, bson.M{"$inc": bson.M{"index": 1}})
+	//err = collection.Update(bson.M{"name": idtype}, bson.M{"$inc": bson.M{"index": 1}})
 	if err != nil {
 		log.Println("Failed in IDMan:update")
 		return -1, err
 	}
 
-	err = collection.Find(bson.M{"name": idtype}).One(&index)
+	err = collection.Find(bson.M{"name": idtype}).One(&idx)
 	if err != nil {
 		log.Println("Failed in IDMan:get")
 		return -1, err
 	}
-	return index, nil
+	log.Println(idx.index)
+	return idx.index, nil
 }
 
 func InsertRegister(email, username, password, challenger string) (err error) {
@@ -106,7 +113,7 @@ func InsertRegister(email, username, password, challenger string) (err error) {
 	return nil
 }
 
-func InsertSubmitQueue(pid int64, code string, lang string, author string) (err error) {
+func InsertSubmitQueue(pid int, code string, lang string, author string) (err error) {
 	var exSbtQue []ExSubmitQueue
 	sbmtime := time.Now().Format("2006-01-02 15:04:05")
 	codelen := strconv.Itoa(len(code))
@@ -136,18 +143,18 @@ func InsertSubmitQueue(pid int64, code string, lang string, author string) (err 
 		rid, err := GetNextID("rid")
 		if err != nil {
 			log.Println("Error: Failed in submition:getnextRid")
-			continue
+			return err
 		}
 		err = rsCollection.Insert(&RuntimeStatus{submition.ID.Hex(), rid, pid, sbmtime, "Pending", code, "Pending", "Pending", codelen, lang, author})
 		if err != nil {
 			log.Println("Error: Failed in submition")
-			continue
+			return err
 		}
 	}
 	return nil
 }
 
-func GetStatusInRange(startIndex, endIndex int64) (statusInfoSet StatusInfoSet, err error) {
+func GetStatusInRange(startIndex, endIndex int) (statusInfoSet StatusInfoSet, err error) {
 	var statInfo []RuntimeStatusInfo
 	//var statInfoList []RuntimeStatusInfo
 
@@ -195,7 +202,7 @@ func GetStatusInRange(startIndex, endIndex int64) (statusInfoSet StatusInfoSet, 
 	return
 }
 
-func GetContestInRange(startIndex, endIndex int64) (contestInfoSet ContestInfoSet, err error) {
+func GetContestInRange(startIndex, endIndex int) (contestInfoSet ContestInfoSet, err error) {
 	var contestInfo []Contest
 
 	session, err := mgo.Dial(hostName)
@@ -226,7 +233,7 @@ func GetContestInRange(startIndex, endIndex int64) (contestInfoSet ContestInfoSe
 	return
 }
 
-func GetContestProblems(cid int64) (contestInfo []ContestProblem, err error) {
+func GetContestProblems(cid int) (contestInfo []ContestProblem, err error) {
 	session, err := mgo.Dial(hostName)
 	if err != nil {
 		log.Println("Connect MongoDB failed")
@@ -245,8 +252,8 @@ func GetContestProblems(cid int64) (contestInfo []ContestProblem, err error) {
 	return contestInfo, nil
 }
 
-//func GetProblemInRange(startIndex, endIndex int64) (problemInfo []ProblemInfo, err error) {
-func GetProblemInRange(startIndex, endIndex int64) (problemInfoSet ProblemInfoSet, err error) {
+//func GetProblemInRange(startIndex, endIndex int) (problemInfo []ProblemInfo, err error) {
+func GetProblemInRange(startIndex, endIndex int) (problemInfoSet ProblemInfoSet, err error) {
 	var problemInfo []ProblemInfo
 
 	session, err := mgo.Dial(hostName)
@@ -276,7 +283,7 @@ func GetProblemInRange(startIndex, endIndex int64) (problemInfoSet ProblemInfoSe
 	return
 }
 
-func GetProblemInfo(pid int64) (problemInfo Problem, err error) {
+func GetProblemInfo(pid int) (problemInfo Problem, err error) {
 	session, err := mgo.Dial(hostName)
 	if err != nil {
 		log.Println("Connect MongoDB failed")
