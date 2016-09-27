@@ -132,6 +132,7 @@ func registHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, string(data))
 		return
 	}
+
 	statusInfo.Status = 200
 	statusInfo.Info = username[0]
 	data, _ := json.Marshal(statusInfo)
@@ -167,7 +168,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 					session.Add(sess, w)
 
 					tNow := time.Now()
-					cookie := http.Cookie{Name: "gosessionid", Value: s[0], Expires: tNow.AddDate(1, 0, 0)}
+					cookie := http.Cookie{Name: "gosessionid", Value: userInfo.Username, Expires: tNow.AddDate(1, 0, 0)}
 					http.SetCookie(w, &cookie)
 
 					statusInfo.Status = 200
