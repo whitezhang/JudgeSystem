@@ -53,6 +53,30 @@ func (man *Manager) initConf(cfgFile string, plbNum, statNum, cstNum int64) (err
 	return
 }
 
+func GetNextID(idtype string) (index int64, err error) {
+	session, err := mgo.Dial(hostName)
+	if err != nil {
+		log.Println("Connect MongoDB failed")
+		return -1, err
+	}
+	defer session.Close()
+	session.SetMode(mgo.Monotonic, true)
+	collection := session.DB(dbName).C("idmanager")
+
+	err = collection.Update(bson.M{"name": idtype}, bson.M{"$inc": bson.M{"index": 1}})
+	if err != nil {
+		log.Println("Failed in IDMan:update")
+		return -1, err
+	}
+
+	err = collection.Find(bson.M{"name": idtype}).One(&index)
+	if err != nil {
+		log.Println("Failed in IDMan:get")
+		return -1, err
+	}
+	return index, nil
+}
+
 func InsertRegister(email, username, password, challenger string) (err error) {
 	var userinfo User
 	var ischallenger bool
@@ -109,7 +133,12 @@ func InsertSubmitQueue(pid int64, code string, lang string, author string) (err 
 		return err
 	}
 	for _, submition := range exSbtQue {
-		err = rsCollection.Insert(&RuntimeStatus{submition.ID.Hex(), pid, sbmtime, "Pending", code, "Pending", "Pending", codelen, lang, author})
+		rid, err := GetNextID("rid")
+		if err != nil {
+			log.Println("Error: Failed in submition:getnextRid")
+			continue
+		}
+		err = rsCollection.Insert(&RuntimeStatus{submition.ID.Hex(), rid, pid, sbmtime, "Pending", code, "Pending", "Pending", codelen, lang, author})
 		if err != nil {
 			log.Println("Error: Failed in submition")
 			continue
@@ -119,11 +148,11 @@ func InsertSubmitQueue(pid int64, code string, lang string, author string) (err 
 }
 
 func GetStatusInRange(startIndex, endIndex int64) (statusInfoSet StatusInfoSet, err error) {
-	var statInfo RuntimeStatus
-	var statInfoList []RuntimeStatus
+	var statInfo []RuntimeStatusInfo
+	//var statInfoList []RuntimeStatusInfo
 
-	_startIndex := int(startIndex)
-	_endIndex := int(endIndex)
+	//_startIndex := int(startIndex)
+	//_endIndex := int(endIndex)
 
 	session, err := mgo.Dial(hostName)
 	if err != nil {
@@ -142,20 +171,27 @@ func GetStatusInRange(startIndex, endIndex int64) (statusInfoSet StatusInfoSet, 
 		return StatusInfoSet{}, err
 	}
 
-	iter := collection.Find(nil).Iter()
-	index := 0
-	for iter.Next(&statInfo) {
-		if index >= _startIndex && index < _endIndex {
-			statInfoList = append(statInfoList, statInfo)
+	/*
+		iter := collection.Find(nil).Iter()
+		index := 0
+		for iter.Next(&statInfo) {
+			if index >= _startIndex && index < _endIndex {
+				statInfoList = append(statInfoList, statInfo)
+			}
+			index += 1
 		}
-		index += 1
-	}
+	*/
 
-	//err = collection.Find(bson.M{"pid": bson.M{"$gte": startIndex, "$lte": endIndex}}).Select(bson.M{"pid": 1, "sbmtime": 1, "status": 1, "memory": 1, "time": 1, "lang": 1, "codelen": 1, "author": 1}).All(&statInfo)
+	err = collection.Find(bson.M{"rid": bson.M{"$gte": startIndex, "$lte": endIndex}}).Select(bson.M{"rid": 1, "pid": 1, "sbmtime": 1, "status": 1, "memory": 1, "time": 1, "lang": 1, "codelen": 1, "author": 1}).All(&statInfo)
+	if err != nil {
+		log.Printf("No Runtimestatus indexing: from: %d to %d\n", startIndex, endIndex)
+		statusInfoSet.PageCount = cnt
+		statusInfoSet.StatInfoList = nil
+		return
+	}
 	//err = collection.Find(bson.M{}).Select(bson.M{"pid": 1, "sbmtime": 1, "status": 1, "memory": 1, "time": 1, "lang": 1, "codelen": 1, "author": 1}).All(&statInfo)
-	log.Printf("No Runtimestatus indexing: from: %d to %d\n", _startIndex, _endIndex)
 	statusInfoSet.PageCount = cnt
-	statusInfoSet.StatInfoList = statInfoList
+	statusInfoSet.StatInfoList = statInfo
 	return
 }
 
@@ -230,7 +266,7 @@ func GetProblemInRange(startIndex, endIndex int64) (problemInfoSet ProblemInfoSe
 		return ProblemInfoSet{}, err
 	}
 
-	err = collection.Find(bson.M{"pid": bson.M{"$gte": startIndex, "$lt": endIndex}}).Select(bson.M{"pid": 1, "title": 1, "solved": 1}).All(&problemInfo)
+	err = collection.Find(bson.M{"pid": bson.M{"$gte": startIndex, "$lt": endIndex}}).Select(bson.M{"pid": 1, "title": 1, "solved": 1, "author": 1}).All(&problemInfo)
 	if err == nil {
 		log.Printf("No Problem Indexing: from %d to %d\n", startIndex, endIndex)
 		problemInfoSet.PageCount = cnt
