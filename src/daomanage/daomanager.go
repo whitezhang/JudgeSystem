@@ -69,7 +69,6 @@ func GetNextID(idtype string) (index int, err error) {
 	collection := session.DB(dbName).C("idmanager")
 
 	err = collection.Update(bson.M{"name": idtype}, bson.M{"$inc": bson.M{"index": 1}})
-	//err = collection.Update(bson.M{"name": idtype}, bson.M{"$inc": bson.M{"index": 1}})
 	if err != nil {
 		log.Println("Failed in IDMan:update")
 		return -1, err
@@ -95,11 +94,19 @@ func InsertRegister(email, username, password, challenger string) (err error) {
 	defer session.Close()
 	session.SetMode(mgo.Monotonic, true)
 	collection := session.DB(dbName).C("user")
+
+	err = collection.Find(bson.M{"email": email}).One(&userinfo)
+	if err == nil {
+		log.Printf("The email %s has been registed", email)
+		return errors.New("The email has been registed")
+	}
+
 	err = collection.Find(bson.M{"username": username}).One(&userinfo)
 	if err == nil {
 		log.Printf("The username %s has been registed", username)
 		return errors.New("The username has been registed")
 	}
+
 	if challenger == "1" {
 		ischallenger = true
 	} else {

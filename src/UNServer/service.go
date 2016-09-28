@@ -12,13 +12,13 @@ import (
 	"net/url"
 	"service/encrypt"
 	"strconv"
-	"time"
+	"strings"
+	//"time"
 )
 
 const (
-	InfoLoginFailed    = "Incorrect username or password"
-	InfoLoginSucc      = "Let's GO! "
-	InfoRegisterFailed = "The username has been used"
+	InfoLoginFailed = "Incorrect username or password"
+	InfoLoginSucc   = "Let's GO! "
 
 	InfoHack = "So..so?"
 )
@@ -108,6 +108,26 @@ func isAuthorized(query url.Values) bool {
 }
 */
 
+func isVaild(typ, str string) bool {
+	if typ == "email" {
+		if strings.Contains(str, "@") {
+			return false
+		}
+		return true
+	} else if typ == "username" {
+		if len(str) < 2 || len(str) > 10 {
+			return false
+		}
+		return true
+	} else if typ == "password" {
+		if len(str) < 3 || len(str) > 20 {
+			return false
+		}
+		return true
+	}
+	return false
+}
+
 func registHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		query      url.Values
@@ -122,12 +142,34 @@ func registHandler(w http.ResponseWriter, r *http.Request) {
 	email, _ := query["email"]
 	username, _ := query["username"]
 	password, _ := query["password"]
-	encryptedPwd := encrypt.DoEncryption(password[0])
 	ischallenger, _ := query["ischallenger"]
+
+	if !isVaild("email", email[0]) {
+		statusInfo.Status = 400
+		statusInfo.Info = "The email is not vaild"
+		data, _ := json.Marshal(statusInfo)
+		fmt.Fprintf(w, string(data))
+		return
+	}
+	if !isVaild("username", username[0]) {
+		statusInfo.Status = 400
+		statusInfo.Info = "The username is not vaild(Must be 2-10)"
+		data, _ := json.Marshal(statusInfo)
+		fmt.Fprintf(w, string(data))
+		return
+	}
+	if !isVaild("password", password[0]) {
+		statusInfo.Status = 400
+		statusInfo.Info = "The password is not vaild(Must be 3-20)"
+		data, _ := json.Marshal(statusInfo)
+		fmt.Fprintf(w, string(data))
+		return
+	}
+	encryptedPwd := encrypt.DoEncryption(password[0])
 
 	if daomanage.InsertRegister(email[0], username[0], encryptedPwd, ischallenger[0]) != nil {
 		statusInfo.Status = 400
-		statusInfo.Info = InfoRegisterFailed
+		statusInfo.Info = "The email has been used"
 		data, _ := json.Marshal(statusInfo)
 		fmt.Fprintf(w, string(data))
 		return
@@ -166,11 +208,11 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 						CAttrs: map[string]interface{}{"username": userInfo.Username},
 					})
 					session.Add(sess, w)
-
-					tNow := time.Now()
-					cookie := http.Cookie{Name: "gosessionid", Value: userInfo.Username, Expires: tNow.AddDate(1, 0, 0)}
-					http.SetCookie(w, &cookie)
-
+					/*
+						tNow := time.Now()
+						cookie := http.Cookie{Name: "gosessionid", Value: userInfo.Username, Expires: tNow.AddDate(1, 0, 0)}
+						http.SetCookie(w, &cookie)
+					*/
 					statusInfo.Status = 200
 					statusInfo.Info = userInfo.Username
 					data, _ := json.Marshal(statusInfo)
