@@ -1,5 +1,8 @@
 #!/bin/bash
 
+#cd ./core
+#sh -x build.sh
+
 ROOTDIR=`dirname $0 | sed -e "s#^\\([^/]\\)#${PWD}/\\1#"`
 GOLANG_VERSION=1.6.1
 
@@ -10,14 +13,17 @@ cat ${ROOTDIR}/go.tar.gz  | tar zxvf -
 export GOROOT=${ROOTDIR}/go
 export GOPATH=$ROOTDIR
 
-#rm -rf ${ROOTDIR}/output &&
+mkdir -p ${ROOTDIR}/output
+
+rm -rf ${ROOTDIR}/output/* &&
 
 cp -rf ./web/* ./output/ &&
 
-go build ./src/UNServer &&
+${GOROOT}/bin/go build ./src/UNServer &&
 
 mkdir -p ${ROOTDIR}/output/{conf,bin,log,data,sh} &&
 
 cp ./sh/* ${ROOTDIR}/output/sh &&
 cp ./src/UNServer/conf/* output/conf/ &&
+#cp ./core/judgeclient output/bin &&
 cp UNServer output/bin || exit 1
