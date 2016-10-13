@@ -19,9 +19,8 @@ var (
 )
 
 var (
-	hostName string
-	port     string
-	dbName   string
+	host   string
+	dbName string
 )
 
 type Manager struct {
@@ -43,13 +42,12 @@ func (man *Manager) initConf(cfgFile string, plbNum, statNum, cstNum int) (err e
 	if err != nil {
 		return
 	}
-	hostName = cfg.Dao.HostName
-	port = cfg.Dao.Port
+	host = cfg.Dao.HostName + ":" + cfg.Dao.Port
 	dbName = cfg.Dao.DBName
 	plbPerPage = plbNum
 	statPerPage = statNum
 	cstPerPage = cstNum
-	log.Printf("Dao conf: %s:%s:%s\n", hostName, port, dbName)
+	log.Printf("Dao conf: %s:%s\n", host, dbName)
 	return
 }
 
@@ -60,7 +58,7 @@ func getNextID(idtype string) (index int, err error) {
 	}
 	var idx Index
 
-	session, err := mgo.Dial(hostName)
+	session, err := mgo.Dial(host)
 	if err != nil {
 		log.Println("Connect MongoDB failed")
 		return -1, err
@@ -88,7 +86,7 @@ func getNextID(idtype string) (index int, err error) {
 func (man *Manager) InsertRegister(email, username, password, challenger string) (err error) {
 	var userinfo User
 	var ischallenger bool
-	session, err := mgo.Dial(hostName)
+	session, err := mgo.Dial(host)
 	if err != nil {
 		log.Println("Connect MongoDB failed")
 		return err
@@ -128,7 +126,7 @@ func (man *Manager) InsertSubmitQueue(pid int, code string, lang string, author 
 	sbmtime := time.Now().Format("2006-01-02 15:04:05")
 	codelen := strconv.Itoa(len(code))
 
-	session, err := mgo.Dial(hostName)
+	session, err := mgo.Dial(host)
 	if err != nil {
 		log.Println("Connect MongoDB failed")
 		return err
@@ -172,7 +170,7 @@ func (man *Manager) GetStatusInRange(startIndex, endIndex int) (statusInfoSet St
 	//_startIndex := int(startIndex)
 	//_endIndex := int(endIndex)
 
-	session, err := mgo.Dial(hostName)
+	session, err := mgo.Dial(host)
 	if err != nil {
 		log.Println("Connect MongoDB failed")
 		return StatusInfoSet{}, err
@@ -217,7 +215,7 @@ func (man *Manager) GetStatusInRange(startIndex, endIndex int) (statusInfoSet St
 func (man *Manager) GetContestInRange(startIndex, endIndex int) (contestInfoSet ContestInfoSet, err error) {
 	var contestInfo []Contest
 
-	session, err := mgo.Dial(hostName)
+	session, err := mgo.Dial(host)
 	if err != nil {
 		log.Println("Connect MongoDB failed")
 		return ContestInfoSet{}, err
@@ -247,7 +245,7 @@ func (man *Manager) GetContestInRange(startIndex, endIndex int) (contestInfoSet 
 
 //func GetContestProblems(cid int) (contestInfo []ContestProblem, err error) {
 func (man *Manager) GetContestProblems(cid int) (contestInfo []ContestProblem, err error) {
-	session, err := mgo.Dial(hostName)
+	session, err := mgo.Dial(host)
 	if err != nil {
 		log.Println("Connect MongoDB failed")
 		return []ContestProblem{}, err
@@ -270,7 +268,7 @@ func (man *Manager) GetContestProblems(cid int) (contestInfo []ContestProblem, e
 func (man *Manager) GetProblemInRange(startIndex, endIndex int) (problemInfoSet ProblemInfoSet, err error) {
 	var problemInfo []ProblemInfo
 
-	session, err := mgo.Dial(hostName)
+	session, err := mgo.Dial(host)
 	if err != nil {
 		log.Println("Connect MongoDB failed")
 		return ProblemInfoSet{}, err
@@ -299,7 +297,7 @@ func (man *Manager) GetProblemInRange(startIndex, endIndex int) (problemInfoSet 
 
 //func GetProblemInfo(pid int) (problemInfo Problem, err error) {
 func (man *Manager) GetProblemInfo(pid int) (problemInfo Problem, err error) {
-	session, err := mgo.Dial(hostName)
+	session, err := mgo.Dial(host)
 	if err != nil {
 		log.Println("Connect MongoDB failed")
 		return Problem{}, err
@@ -319,7 +317,7 @@ func (man *Manager) GetProblemInfo(pid int) (problemInfo Problem, err error) {
 
 //func GetUserInfo(key, value string) (userInfo User, err error) {
 func (man *Manager) GetUserInfo(key, value string) (userInfo User, err error) {
-	session, err := mgo.Dial(hostName)
+	session, err := mgo.Dial(host)
 	if err != nil {
 		log.Println("Connect MongoDB failed")
 		return User{}, err
