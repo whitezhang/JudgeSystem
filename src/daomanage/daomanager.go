@@ -200,12 +200,15 @@ func (man *Manager) GetStatusInRange(startIndex, endIndex int) (statusInfoSet St
 
 	err = collection.Find(bson.M{"rid": bson.M{"$gte": startIndex, "$lte": endIndex}}).Select(bson.M{"rid": 1, "pid": 1, "sbmtime": 1, "status": 1, "memory": 1, "time": 1, "lang": 1, "codelen": 1, "author": 1}).All(&statInfo)
 	if err != nil {
-		log.Printf("No Runtimestatus indexing: from: %d to %d\n", startIndex, endIndex)
+		log.Printf("Get Runtimestatus Error: from: %d to %d\n", startIndex, endIndex)
 		statusInfoSet.PageCount = cnt
 		statusInfoSet.StatInfoList = nil
 		return
 	}
 	//err = collection.Find(bson.M{}).Select(bson.M{"pid": 1, "sbmtime": 1, "status": 1, "memory": 1, "time": 1, "lang": 1, "codelen": 1, "author": 1}).All(&statInfo)
+	for i, j := 0, len(statInfo)-1; i < j; i, j = i+1, j-1 {
+		statInfo[i], statInfo[j] = statInfo[j], statInfo[i]
+	}
 	statusInfoSet.PageCount = cnt
 	statusInfoSet.StatInfoList = statInfo
 	return
@@ -234,12 +237,12 @@ func (man *Manager) GetContestInRange(startIndex, endIndex int) (contestInfoSet 
 
 	err = collection.Find(bson.M{"cid": bson.M{"$gte": startIndex, "$lt": endIndex}}).All(&contestInfo)
 	if err == nil {
-		log.Printf("No Contest indexing: from: %d to %d\n", startIndex, endIndex)
 		contestInfoSet.PageCount = cnt
 		contestInfoSet.CstInfoList = contestInfo
 		return contestInfoSet, err
+	} else {
+		log.Printf("Get Contest Error: from %d to %d\n", startIndex, endIndex)
 	}
-
 	return
 }
 
@@ -287,10 +290,11 @@ func (man *Manager) GetProblemInRange(startIndex, endIndex int) (problemInfoSet 
 
 	err = collection.Find(bson.M{"pid": bson.M{"$gte": startIndex, "$lt": endIndex}}).Select(bson.M{"pid": 1, "title": 1, "solved": 1, "author": 1}).All(&problemInfo)
 	if err == nil {
-		log.Printf("No Problem Indexing: from %d to %d\n", startIndex, endIndex)
 		problemInfoSet.PageCount = cnt
 		problemInfoSet.ProInfoList = problemInfo
 		return problemInfoSet, err
+	} else {
+		log.Printf("Get Problem Error: from %d to %d\n", startIndex, endIndex)
 	}
 	return
 }
