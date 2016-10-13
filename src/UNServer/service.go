@@ -54,7 +54,6 @@ func sessionHandler(w http.ResponseWriter, r *http.Request) {
 	var statusInfo StatusInfo
 
 	sess := session.Get(r)
-	log.Println("sess", sess)
 	if sess != nil {
 		statusInfo.Status = 200
 		statusInfo.Info = sess.CAttr("username").(string)
@@ -110,7 +109,7 @@ func isAuthorized(query url.Values) bool {
 
 func isVaild(typ, str string) bool {
 	if typ == "email" {
-		if strings.Contains(str, "@") {
+		if !strings.Contains(str, "@") {
 			return false
 		}
 		return true
@@ -167,7 +166,8 @@ func registHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	encryptedPwd := encrypt.DoEncryption(password[0])
 
-	if daomanage.InsertRegister(email[0], username[0], encryptedPwd, ischallenger[0]) != nil {
+	//if daomanage.InsertRegister(email[0], username[0], encryptedPwd, ischallenger[0]) != nil {
+	if ctx.SvrCtx.DaoMan.InsertRegister(email[0], username[0], encryptedPwd, ischallenger[0]) != nil {
 		statusInfo.Status = 400
 		statusInfo.Info = "The email has been used"
 		data, _ := json.Marshal(statusInfo)
@@ -198,7 +198,8 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get user info
 	if s, ok := query["username"]; ok {
-		userInfo, err = daomanage.GetUserInfo("email", s[0])
+		//userInfo, err = daomanage.GetUserInfo("email", s[0])
+		userInfo, err = ctx.SvrCtx.DaoMan.GetUserInfo("email", s[0])
 		if err == nil {
 			if p, ok := query["password"]; ok {
 				encryptedPwd := encrypt.DoEncryption(p[0])
@@ -248,7 +249,8 @@ func problemInfoHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			return
 		}
-		problemInfo, err = daomanage.GetProblemInfo(pid)
+		//problemInfo, err = daomanage.GetProblemInfo(pid)
+		problemInfo, err = ctx.SvrCtx.DaoMan.GetProblemInfo(pid)
 		if err == nil {
 			data, _ := json.Marshal(problemInfo)
 			fmt.Fprintf(w, string(data))
@@ -284,10 +286,10 @@ func problemsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	startIndex := PlbPerPage * (page - 1)
 	endIndex := startIndex + PlbPerPage
-	log.Println(PlbPerPage, startIndex, endIndex)
 
 	// Get Problems
-	problemInfoList, err := daomanage.GetProblemInRange(startIndex, endIndex)
+	//problemInfoList, err := daomanage.GetProblemInRange(startIndex, endIndex)
+	problemInfoList, err := ctx.SvrCtx.DaoMan.GetProblemInRange(startIndex, endIndex)
 	if err == nil {
 		data, _ := json.Marshal(problemInfoList)
 		fmt.Fprintf(w, string(data))
@@ -323,7 +325,8 @@ func statusInfoHandler(w http.ResponseWriter, r *http.Request) {
 	// Get status info
 	startIndex := StatPerPage * (page - 1)
 	endIndex := startIndex + StatPerPage
-	statInfo, err := daomanage.GetStatusInRange(startIndex, endIndex)
+	//statInfo, err := daomanage.GetStatusInRange(startIndex, endIndex)
+	statInfo, err := ctx.SvrCtx.DaoMan.GetStatusInRange(startIndex, endIndex)
 	if err == nil {
 		data, _ := json.Marshal(statInfo)
 		fmt.Fprintf(w, string(data))
@@ -361,7 +364,8 @@ func contestsHandler(w http.ResponseWriter, r *http.Request) {
 	// Get contests info
 	startIndex := CstPerPage * (page - 1)
 	endIndex := startIndex + CstPerPage
-	contestInfo, err = daomanage.GetContestInRange(startIndex, endIndex)
+	//contestInfo, err = daomanage.GetContestInRange(startIndex, endIndex)
+	contestInfo, err = ctx.SvrCtx.DaoMan.GetContestInRange(startIndex, endIndex)
 	if err == nil {
 		data, _ := json.Marshal(contestInfo)
 		fmt.Fprintf(w, string(data))
@@ -399,11 +403,13 @@ func contestInfoHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			return
 		}
-		contestInfo, err = daomanage.GetContestProblems(cid)
+		//contestInfo, err = daomanage.GetContestProblems(cid)
+		contestInfo, err = ctx.SvrCtx.DaoMan.GetContestProblems(cid)
 		if err == nil {
 			// data, _ := json.Marshal(contestInfo)
 			for _, problem := range contestInfo {
-				problemInfo, err := daomanage.GetProblemInfo(problem.PID)
+				//problemInfo, err := daomanage.GetProblemInfo(problem.PID)
+				problemInfo, err := ctx.SvrCtx.DaoMan.GetProblemInfo(problem.PID)
 				if err != nil {
 					continue
 				}
@@ -434,7 +440,8 @@ func submitHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println("ParseInt Error", err)
 		return
 	}
-	daomanage.InsertSubmitQueue(npid, code, lang, author)
+	//daomanage.InsertSubmitQueue(npid, code, lang, author)
+	ctx.SvrCtx.DaoMan.InsertSubmitQueue(npid, code, lang, author)
 
 	statusInfo.Status = 200
 	statusInfo.Info = "Submitted"
@@ -463,7 +470,8 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get user info
 	if s, ok := query["uid"]; ok {
-		userInfo, err = daomanage.GetUserInfo("uid", s[0])
+		//userInfo, err = daomanage.GetUserInfo("uid", s[0])
+		userInfo, err = ctx.SvrCtx.DaoMan.GetUserInfo("uid", s[0])
 		if err == nil {
 			data, _ := json.Marshal(userInfo)
 			fmt.Fprintf(w, string(data))

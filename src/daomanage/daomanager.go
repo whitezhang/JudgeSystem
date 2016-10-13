@@ -53,7 +53,8 @@ func (man *Manager) initConf(cfgFile string, plbNum, statNum, cstNum int) (err e
 	return
 }
 
-func GetNextID(idtype string) (index int, err error) {
+//func GetNextID(idtype string) (index int, err error) {
+func getNextID(idtype string) (index int, err error) {
 	type Index struct {
 		index int
 	}
@@ -83,7 +84,8 @@ func GetNextID(idtype string) (index int, err error) {
 	return idx.index, nil
 }
 
-func InsertRegister(email, username, password, challenger string) (err error) {
+//func InsertRegister(email, username, password, challenger string) (err error) {
+func (man *Manager) InsertRegister(email, username, password, challenger string) (err error) {
 	var userinfo User
 	var ischallenger bool
 	session, err := mgo.Dial(hostName)
@@ -120,7 +122,8 @@ func InsertRegister(email, username, password, challenger string) (err error) {
 	return nil
 }
 
-func InsertSubmitQueue(pid int, code string, lang string, author string) (err error) {
+//func InsertSubmitQueue(pid int, code string, lang string, author string) (err error) {
+func (man *Manager) InsertSubmitQueue(pid int, code string, lang string, author string) (err error) {
 	var exSbtQue []ExSubmitQueue
 	sbmtime := time.Now().Format("2006-01-02 15:04:05")
 	codelen := strconv.Itoa(len(code))
@@ -147,7 +150,7 @@ func InsertSubmitQueue(pid int, code string, lang string, author string) (err er
 		return err
 	}
 	for _, submition := range exSbtQue {
-		rid, err := GetNextID("rid")
+		rid, err := getNextID("rid")
 		if err != nil {
 			log.Println("Error: Failed in submition:getnextRid")
 			return err
@@ -161,7 +164,8 @@ func InsertSubmitQueue(pid int, code string, lang string, author string) (err er
 	return nil
 }
 
-func GetStatusInRange(startIndex, endIndex int) (statusInfoSet StatusInfoSet, err error) {
+//func GetStatusInRange(startIndex, endIndex int) (statusInfoSet StatusInfoSet, err error) {
+func (man *Manager) GetStatusInRange(startIndex, endIndex int) (statusInfoSet StatusInfoSet, err error) {
 	var statInfo []RuntimeStatusInfo
 	//var statInfoList []RuntimeStatusInfo
 
@@ -209,7 +213,8 @@ func GetStatusInRange(startIndex, endIndex int) (statusInfoSet StatusInfoSet, er
 	return
 }
 
-func GetContestInRange(startIndex, endIndex int) (contestInfoSet ContestInfoSet, err error) {
+//func GetContestInRange(startIndex, endIndex int) (contestInfoSet ContestInfoSet, err error) {
+func (man *Manager) GetContestInRange(startIndex, endIndex int) (contestInfoSet ContestInfoSet, err error) {
 	var contestInfo []Contest
 
 	session, err := mgo.Dial(hostName)
@@ -240,7 +245,8 @@ func GetContestInRange(startIndex, endIndex int) (contestInfoSet ContestInfoSet,
 	return
 }
 
-func GetContestProblems(cid int) (contestInfo []ContestProblem, err error) {
+//func GetContestProblems(cid int) (contestInfo []ContestProblem, err error) {
+func (man *Manager) GetContestProblems(cid int) (contestInfo []ContestProblem, err error) {
 	session, err := mgo.Dial(hostName)
 	if err != nil {
 		log.Println("Connect MongoDB failed")
@@ -260,7 +266,8 @@ func GetContestProblems(cid int) (contestInfo []ContestProblem, err error) {
 }
 
 //func GetProblemInRange(startIndex, endIndex int) (problemInfo []ProblemInfo, err error) {
-func GetProblemInRange(startIndex, endIndex int) (problemInfoSet ProblemInfoSet, err error) {
+//func GetProblemInRange(startIndex, endIndex int) (problemInfoSet ProblemInfoSet, err error) {
+func (man *Manager) GetProblemInRange(startIndex, endIndex int) (problemInfoSet ProblemInfoSet, err error) {
 	var problemInfo []ProblemInfo
 
 	session, err := mgo.Dial(hostName)
@@ -290,7 +297,8 @@ func GetProblemInRange(startIndex, endIndex int) (problemInfoSet ProblemInfoSet,
 	return
 }
 
-func GetProblemInfo(pid int) (problemInfo Problem, err error) {
+//func GetProblemInfo(pid int) (problemInfo Problem, err error) {
+func (man *Manager) GetProblemInfo(pid int) (problemInfo Problem, err error) {
 	session, err := mgo.Dial(hostName)
 	if err != nil {
 		log.Println("Connect MongoDB failed")
@@ -309,7 +317,8 @@ func GetProblemInfo(pid int) (problemInfo Problem, err error) {
 	return
 }
 
-func GetUserInfo(key, value string) (userInfo User, err error) {
+//func GetUserInfo(key, value string) (userInfo User, err error) {
+func (man *Manager) GetUserInfo(key, value string) (userInfo User, err error) {
 	session, err := mgo.Dial(hostName)
 	if err != nil {
 		log.Println("Connect MongoDB failed")
