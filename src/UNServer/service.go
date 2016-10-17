@@ -4,6 +4,7 @@ import (
 	//l4g "classified-lib/golang-lib/log"
 	ctx "context"
 	"daomanage"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"github.com/icza/session"
@@ -429,8 +430,17 @@ func submitHandler(w http.ResponseWriter, r *http.Request) {
 	var statusInfo StatusInfo
 
 	r.ParseForm()
+	//rawCode, _ := url.QueryUnescape(r.PostFormValue("code"))
+	rawCode := r.PostFormValue("code")
+	rawCode = strings.Replace(rawCode, " ", "+", -1)
 	pid := r.PostFormValue("pid")
-	code := r.PostFormValue("code")
+	log.Println(rawCode)
+	code, err := base64.StdEncoding.DecodeString(rawCode)
+	//code, err := base64.RawURLEncoding.DecodeString(rawCode)
+	if err != nil {
+		log.Println("Decode code Error", err)
+		return
+	}
 	lang := r.PostFormValue("lang")
 	author := r.PostFormValue("author")
 
@@ -441,7 +451,7 @@ func submitHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//daomanage.InsertSubmitQueue(npid, code, lang, author)
-	ctx.SvrCtx.DaoMan.InsertSubmitQueue(npid, code, lang, author)
+	ctx.SvrCtx.DaoMan.InsertSubmitQueue(npid, string(code), lang, author)
 
 	statusInfo.Status = 200
 	statusInfo.Info = "Submitted"
