@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <getopt.h>
 #include <stdlib.h>
 #include <string.h>
 #include <dirent.h>
@@ -25,6 +26,13 @@
 #include <sys/stat.h>
 
 using namespace std;
+
+// Conf
+typedef struct Conf {
+    char *judge_source = "unsys.submitqueue";
+    char *judge_pid = "-1";
+}Conf;
+Conf sys_conf;
 
 const int BATCH_SIZE = 128;
 
@@ -421,7 +429,7 @@ void mv_code2runtime(problem_runtime *pr_list[BATCH_SIZE]) {
             strcat(pathname, "Main.c");
         }
         else if(!strcmp(lang, "CPP")) {
-            strcat(pathname, "Main.cpp");
+            strcat(pathname, "Main.cc");
         }
         ofstream fout(pathname);
         fout << code;
@@ -430,7 +438,7 @@ void mv_code2runtime(problem_runtime *pr_list[BATCH_SIZE]) {
 
         strcpy(pr_list[index]->filename, pathname);
 
-        //c.remove("unsys.submitqueue", cur_obj);
+        c.remove("unsys.submitqueue", cur_obj);
         index++;
         if(index > BATCH_SIZE) {
             break;
@@ -518,9 +526,38 @@ void init_runtime(problem_runtime *pr_list[BATCH_SIZE]) {
     }
 }
 
-int main() {
+static const struct option long_option[]={
+    {"help",no_argument,NULL,'h'},
+    {"rejudge",optional_argument,NULL,'r'},
+    {0, 0, 0, 0}
+};
+
+void print_usage() {
+    printf("Usage:\n");
+    printf("\t./judgeclient -r [pid]\t\t rejudge mode\n");
+}
+
+
+int main(int argc, char **argv) {
+    int opt = 0;
+    while((opt = getopt_long(argc, argv, "hr", long_option, NULL)) != -1) {
+        switch(opt) {
+            case 'h':
+                print_usage();
+                break;
+            case 'r':
+                sys_conf.judge_source = (char*)malloc(sizeof("unsys.runtimestatus"));
+                strcpy(sys_conf.judge_source, "unsys.runtimestatus");
+                sys_conf.judge_pid = optarg;
+                break;
+            default:
+                print_usage();
+                break;
+        }
+    }
     problem_runtime *pr_list[BATCH_SIZE];
     init_runtime(pr_list);
     process_smtqueue(pr_list);
     process_all_submits(pr_list);
+    return 0;
 }
