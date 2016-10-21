@@ -79,13 +79,14 @@ int execute_cmd(const char *fmt, ...) {
     return ret;
 }
 
-void run_solution(int runid, int clientid, const char* data_in) {
+//void run_solution(int runid, int clientid, const char* data_in) {
+void run_solution(const char* data_in) {
     nice(19);
     freopen(data_in, "r", stdin);
     freopen("user.out", "w", stdout);
     freopen("err.out", "w", stderr);
 
-    char buf[BUFFER_SIZE], runidstr[BUFFER_SIZE];
+    //char buf[BUFFER_SIZE], runidstr[BUFFER_SIZE];
     struct rlimit LIM;
     ptrace(PTRACE_TRACEME, 0, NULL, NULL);
     // max time of cpu
@@ -118,12 +119,14 @@ void run_solution(int runid, int clientid, const char* data_in) {
     LIM.rlim_cur = STD_MB * 10;
     setrlimit(RLIMIT_DATA, &LIM);
 
-    sprintf(runidstr, "%d", runid);
-    sprintf(buf, "%d", clientid);
+    //sprintf(runidstr, "%d", runid);
+    //sprintf(buf, "%d", clientid);
 
     // run client
     //execl("./test", "test", "" , NULL);
     execl("./Main", "Main", "" , NULL);
+    fflush(stderr);
+    exit(0);
 }
 
 int get_proc_status(int pid, const char * mark) {
@@ -201,16 +204,18 @@ int compile(int lang) {
                 printf("Nothing to do in compiling progress\n");
                 break;
         }
-        if(DEBUG) {
-            printf("Compile finished\n");
-        }
         exit(0);
     }
     else {
         int status = 0;
         waitpid(pid, &status, 0);
         if(DEBUG) {
-            printf("Compiling status=%d\n", status);
+            if(status == 0) {
+                printf("Compile passed. Status=%d\n", status);
+            }
+            else {
+                printf("Compile error. Status=%d\n", status);
+            }
         }
         return status;
     }
@@ -255,7 +260,7 @@ int watch_runtime(pid_t pidApp, int lang, int topmemory, int mem_lmt, int time_l
                 printf("Out of memory %d\n", topmemory);
             }
             ptrace(PTRACE_KILL, pidApp, NULL, NULL);
-            break;
+            return F_RE;
         }
 
         // 0 if the subprocess successed
@@ -401,7 +406,7 @@ void mv_code2runtime(problem_runtime *pr_list[BATCH_SIZE]) {
     mongo::BSONElement cur_ele;
     mongo::OID objectID;
     c.connect(DB_HOST);
-    auto_ptr<mongo::DBClientCursor> cursor = c.query("unsys.submitqueue", mongo::BSONObj());
+    auto_ptr<mongo::DBClientCursor> cursor = c.query(sys_conf.judge_source, mongo::BSONObj());
     while(cursor->more()) {
         time_t t;
         int timestamp = time(&t);
@@ -410,6 +415,7 @@ void mv_code2runtime(problem_runtime *pr_list[BATCH_SIZE]) {
 
         int pid;
         const char *code, *lang, *oid;
+        char spid[128];
 
         cur_obj = cursor->next();
         cur_obj.getObjectID(cur_ele);
@@ -419,6 +425,12 @@ void mv_code2runtime(problem_runtime *pr_list[BATCH_SIZE]) {
         pid = cur_obj.getIntField("pid");
         code= cur_obj.getStringField("code");
         lang = cur_obj.getStringField("lang");
+
+        sprintf(spid, "%d", pid);
+
+        if(!strcmp(sys_conf.judge_source, "unsys.runtimestatus") && strcmp(sys_conf.judge_pid, "-1") && strcmp(spid, sys_conf.judge_pid)) {
+            continue;
+        }
 
         mkdir_if_not_exist(pathname);
         strcpy(pr_list[index]->pathname, pathname);
@@ -438,7 +450,10 @@ void mv_code2runtime(problem_runtime *pr_list[BATCH_SIZE]) {
 
         strcpy(pr_list[index]->filename, pathname);
 
-        c.remove("unsys.submitqueue", cur_obj);
+        if(!strcmp(sys_conf.judge_source, "unsys.submitqueue")) {
+            c.remove(sys_conf.judge_source, cur_obj);
+        }
+        //c.remove("unsys.submitqueue", cur_obj);
         index++;
         if(index > BATCH_SIZE) {
             break;
@@ -447,17 +462,12 @@ void mv_code2runtime(problem_runtime *pr_list[BATCH_SIZE]) {
 }
 
 int process_smtqueue(problem_runtime *pr_list[BATCH_SIZE]) {
-    mongo::client::initialize();
-    try {
-        mv_code2runtime(pr_list);
-    } catch(const mongo::DBException &e) {
-        printf("connection err\n");
-    }
+    mv_code2runtime(pr_list);
     return EXIT_SUCCESS;
 }
 
 void update_solution(const char *oid, const int jdg_ret, const int mem_peak, const int time_used) {
-    mongo::client::initialize();
+    //mongo::client::initialize();
     try {
         mongo::DBClientConnection c;
 
@@ -473,7 +483,7 @@ void update_solution(const char *oid, const int jdg_ret, const int mem_peak, con
 }
 
 int process_single_submit(problem_runtime *pr_list) {
-    int mem_lmt = 32;   // 32MB
+    int mem_lmt = 10;   // 10MB
     int time_lmt = 1000;    // 1000ms
     int topmemory = 0;
 
@@ -492,18 +502,26 @@ int process_single_submit(problem_runtime *pr_list) {
     if(pidApp == 0) {
         char data_in[128];
         sprintf(data_in, "%s/%d/data.in", DATA_PATH, pr_list->pid);
-        run_solution(1, 1, data_in);
+        printf("i am the child process, my process id is %d/n",getpid());
+        //run_solution(1, 1, data_in);
+        run_solution(data_in);
     }
     else {
         int mem_peak, time_used;
         int jdg_ret;
         mem_peak = time_used = 0;
-        watch_runtime(pidApp, LANGC, topmemory, mem_lmt, time_lmt, &mem_peak, &time_used);
-        jdg_ret = judge_solution(pr_list->pid);
+        jdg_ret = watch_runtime(pidApp, LANGC, topmemory, mem_lmt, time_lmt, &mem_peak, &time_used);
+
+        if(jdg_ret == F_RE) {
+            update_solution(pr_list->oid, jdg_ret, mem_peak, time_used);
+        }
+        else {
+            jdg_ret = judge_solution(pr_list->pid);
+            update_solution(pr_list->oid, jdg_ret, mem_peak, time_used);
+        }
         if(DEBUG) {
             printf("Judge Result in Progress: %d\n", jdg_ret);
         }
-        update_solution(pr_list->oid, jdg_ret, mem_peak, time_used);
         return 0;
     }
 }
@@ -526,9 +544,9 @@ void init_runtime(problem_runtime *pr_list[BATCH_SIZE]) {
     }
 }
 
-static const struct option long_option[]={
+static const struct option long_option[] = {
     {"help",no_argument,NULL,'h'},
-    {"rejudge",optional_argument,NULL,'r'},
+    {"rejudge",required_argument,NULL,'r'},
     {0, 0, 0, 0}
 };
 
@@ -537,10 +555,13 @@ void print_usage() {
     printf("\t./judgeclient -r [pid]\t\t rejudge mode\n");
 }
 
-
+/*
+ * ./judgeclient -h
+ *      -r [pid] rejudge all problems if pid == -1
+ * */
 int main(int argc, char **argv) {
     int opt = 0;
-    while((opt = getopt_long(argc, argv, "hr", long_option, NULL)) != -1) {
+    while((opt = getopt_long(argc, argv, "hr:", long_option, NULL)) != -1) {
         switch(opt) {
             case 'h':
                 print_usage();
@@ -548,6 +569,7 @@ int main(int argc, char **argv) {
             case 'r':
                 sys_conf.judge_source = (char*)malloc(sizeof("unsys.runtimestatus"));
                 strcpy(sys_conf.judge_source, "unsys.runtimestatus");
+                printf("%s", optarg);
                 sys_conf.judge_pid = optarg;
                 break;
             default:
