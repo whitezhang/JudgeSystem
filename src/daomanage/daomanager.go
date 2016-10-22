@@ -153,7 +153,7 @@ func (man *Manager) InsertSubmitQueue(pid int, code string, lang string, author 
 			log.Println("Error: Failed in submition:getnextRid")
 			return err
 		}
-		err = rsCollection.Insert(&RuntimeStatus{submition.ID.Hex(), rid, pid, sbmtime, "Pending", code, "Pending", "Pending", codelen, lang, author})
+		err = rsCollection.Insert(&RuntimeStatus{submition.ID.Hex(), rid, -1, pid, sbmtime, "Pending", code, "Pending", "Pending", codelen, lang, author})
 		if err != nil {
 			log.Println("Error: Failed in submition")
 			return err

@@ -66,6 +66,7 @@ type ExSubmitQueue struct {
 type RuntimeStatus struct {
 	Index   string `bson:"_index" json:"_index"`
 	RID     int    `bson:"rid" json:"rid"`
+	CID     int    `bson:"cid" joson:"cid"`
 	PID     int    `bson:"pid" json:"pid"`
 	SbmTime string `bson:"sbmtime" json:"sbmtime"`
 	Status  string `bson:"status" json:"status"`
@@ -90,6 +91,7 @@ type StatusInfoSet struct {
 
 type RuntimeStatusInfo struct {
 	RID     int    `bson:"rid" json:"rid"`
+	CID     int    `bson:"cid" joson:"cid"`
 	PID     int    `bson:"pid" json:"pid"`
 	SbmTime string `bson:"sbmtime" json:"sbmtime"`
 	Status  string `bson:"status" json:"status"`
